@@ -79,6 +79,12 @@ agent-bench run --task <task-id> --agent <agent-name>
 
 # Run full benchmark suite
 agent-bench run --suite all --agent <agent-name>
+
+# Compare agents
+agent-bench compare --agents claude,gpt4 --suite all
+
+# Generate report
+agent-bench report --format html --output ./reports/
 ```
 
 ## Contributing Tasks
@@ -93,42 +99,193 @@ agent-bench run --suite all --agent <agent-name>
 ### Task Template
 
 ```yaml
-id: task-001
-title: "Brief description of the task"
-category: bug-fix | feature | refactor | integration | config | docs
-difficulty: easy | medium | hard | expert
-repository: https://github.com/org/repo
-commit: abc123def456
+version: "1.0"
+id: BUG-001
+title: "Fix race condition in cache invalidation"
+category: bug-fix
+difficulty: hard
+
+source:
+  repository: https://github.com/org/repo
+  commit: abc123def456
+  branch: main
+
+environment:
+  runtime: python:3.11
+  dependencies:
+    - requirements.txt
+  setup_commands:
+    - pip install -e .
+
 prompt: |
-  The full prompt given to the agent...
+  The cache invalidation has a race condition causing
+  intermittent test failures. Fix the concurrency issue
+  while maintaining existing functionality.
+
+hints:                           # Optional progressive hints
+  - level: 1
+    text: "Check the locking mechanism"
+  - level: 2
+    text: "Look at concurrent access patterns"
+
 verification:
-  type: test | script | manual
-  command: "pytest tests/test_feature.py"
+  primary:
+    type: pytest
+    command: "pytest tests/test_cache.py -v"
+    timeout: 60
+  secondary:
+    type: script
+    command: "./verify_no_race.sh"
+
+constraints:
+  max_iterations: 10
+  max_tokens: 100000
+  timeout_minutes: 30
+  allowed_tools: ["read", "write", "bash"]
+
 metadata:
-  estimated_time: "30m"
-  tags: ["python", "api", "database"]
+  author: "engineer@company.com"
+  created: "2024-01-15"
+  tags: ["concurrency", "caching", "python"]
+  estimated_time: "45m"
+  real_solution_loc: 12
 ```
 
 ## Project Structure
 
 ```
 agent-bench/
-├── README.md
-├── pyproject.toml
-├── src/
-│   └── agent_bench/
-│       ├── __init__.py
-│       ├── cli.py
-│       ├── runner.py
-│       ├── evaluator.py
-│       └── reporters/
-├── tasks/
-│   ├── bug-fixes/
-│   ├── features/
-│   └── refactoring/
-├── agents/
-│   └── adapters/
-└── results/
+├── config/                 # Global and agent-specific configurations
+├── src/agent_bench/
+│   ├── cli/                # Command-line interface
+│   ├── core/               # Task models, session, context
+│   ├── registry/           # Task, agent, plugin discovery
+│   ├── runners/            # Local and Docker execution
+│   ├── agents/             # Agent adapters (Claude, GPT, etc.)
+│   ├── evaluation/         # Verifiers and metrics collection
+│   ├── environment/        # Sandbox isolation, git ops
+│   ├── storage/            # Results persistence
+│   ├── reporting/          # Report generators
+│   └── plugins/            # Extension system
+├── tasks/                  # Benchmark task definitions
+├── results/                # Run results and comparisons
+├── tests/                  # Unit and integration tests
+└── docs/                   # Documentation
+```
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph CLI["CLI Layer"]
+        run[run]
+        list[list]
+        submit[submit]
+        report[report]
+        compare[compare]
+    end
+
+    subgraph Core["Core Layer"]
+        session[Session Manager]
+        task[Task Loader]
+        context[Context Builder]
+        session --> task --> context
+    end
+
+    subgraph Orchestration["Orchestration Layer"]
+        orchestrator[Orchestrator]
+        runner[Runner<br/>local/docker]
+        sandbox[Sandbox<br/>isolation]
+        orchestrator --> runner --> sandbox
+    end
+
+    subgraph Agent["Agent Layer"]
+        registry[Agent Registry]
+        protocol[Protocol Handler]
+        adapters[Adapters<br/>claude/gpt/local]
+        registry --> protocol --> adapters
+    end
+
+    subgraph Evaluation["Evaluation Layer"]
+        verifiers[Verifiers<br/>test/script/llm]
+        metrics[Metrics Collector]
+        scorer[Scorer]
+        verifiers --> metrics --> scorer
+    end
+
+    subgraph Storage["Storage Layer"]
+        results[Results Store]
+        artifacts[Artifacts Store]
+        reports[Report Generator]
+        results --> artifacts --> reports
+    end
+
+    CLI --> Core
+    Core --> Orchestration
+    Orchestration --> Agent
+    Agent --> Evaluation
+    Evaluation --> Storage
+```
+
+## Key Components
+
+### Registry Pattern
+
+Central discovery and management for tasks, agents, and plugins:
+
+```python
+from agent_bench.registry import TaskRegistry
+
+registry = TaskRegistry()
+tasks = registry.filter(category="bug-fix", difficulty="hard")
+```
+
+### Plugin Architecture
+
+Extensible system for custom verifiers, reporters, and agents:
+
+```python
+# pyproject.toml
+[project.entry-points."agent_bench.verifiers"]
+custom = "my_package:CustomVerifier"
+```
+
+### Environment Isolation
+
+Reproducible execution environments with state management:
+
+```python
+from agent_bench.environment import DockerSandbox
+
+async with DockerSandbox(task) as sandbox:
+    snapshot = await sandbox.snapshot()
+    result = await runner.execute(agent, task, sandbox)
+    await sandbox.restore(snapshot)  # Reset for next run
+```
+
+## Results Schema
+
+```python
+# Run results are stored with full provenance
+{
+    "run_id": "run_20240115_143022_BUG001_claude",
+    "task_id": "BUG-001",
+    "agent_id": "claude-3-opus",
+    "timestamp": "2024-01-15T14:30:22Z",
+    "status": "success",
+    "metrics": {
+        "total_tokens": 45230,
+        "input_tokens": 12450,
+        "output_tokens": 32780,
+        "iterations": 3,
+        "duration_seconds": 127.4,
+        "tool_calls": {"read": 15, "write": 4, "bash": 8},
+        "human_interventions": 0
+    },
+    "verification_results": [
+        {"type": "pytest", "passed": true, "details": "12 tests passed"}
+    ]
+}
 ```
 
 ## Roadmap
@@ -139,6 +296,8 @@ agent-bench/
 - [ ] Results dashboard and reporting
 - [ ] CI/CD integration for automated benchmarking
 - [ ] Public leaderboard
+- [ ] Plugin marketplace
+- [ ] Multi-agent collaboration benchmarks
 
 ## License
 
