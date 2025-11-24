@@ -16,15 +16,15 @@ Agent Bench creates reproducible evaluation environments derived from authentic 
 
 ### Prerequisites
 
-- Python 3.10+
+- Rust 1.75+
 - Git
 
 ### Installation
 
 ```bash
-git clone https://github.com/your-org/agent-bench.git
+git clone https://github.com/jiahaoxiang2000/agent-bench.git
 cd agent-bench
-pip install -e .
+cargo build --release
 ```
 
 ### Usage
@@ -69,14 +69,15 @@ metadata:
 
 ```
 agent-bench/
-├── src/agent_bench/
-│   ├── cli.py              # Command-line interface
-│   ├── task.py             # Task model and loader
-│   ├── runner.py           # Task execution
+├── src/
+│   ├── main.rs             # Entry point
+│   ├── cli.rs              # Command-line interface
+│   ├── task.rs             # Task model and loader
+│   ├── runner.rs           # Task execution
 │   ├── agents/             # Agent adapters
-│   │   ├── base.py
-│   │   └── claude.py
-│   └── evaluator.py        # Result verification
+│   │   ├── mod.rs
+│   │   └── claude.rs
+│   └── evaluator.rs        # Result verification
 ├── tasks/                  # Benchmark tasks
 │   └── examples/
 └── results/                # Run outputs
@@ -112,16 +113,17 @@ flowchart LR
 
 ## Evaluation Metrics
 
-| Metric | Description |
-|--------|-------------|
+| Metric       | Description               |
+| ------------ | ------------------------- |
 | Success Rate | Tasks completed correctly |
-| Iterations | Attempts before success |
-| Token Usage | Tokens consumed |
-| Duration | Time to completion |
+| Iterations   | Attempts before success   |
+| Token Usage  | Tokens consumed           |
+| Duration     | Time to completion        |
 
 ## Roadmap
 
 ### MVP (Current)
+
 - [x] Project setup
 - [ ] Task loader and validator
 - [ ] Single agent adapter (Claude)
@@ -130,12 +132,14 @@ flowchart LR
 - [ ] JSON results output
 
 ### Phase 2
+
 - [ ] Additional agent adapters (OpenAI, local LLMs)
 - [ ] Docker-based isolation
 - [ ] HTML report generation
 - [ ] Agent comparison tooling
 
 ### Phase 3
+
 - [ ] Plugin architecture
 - [ ] CI/CD integration
 - [ ] Public leaderboard
