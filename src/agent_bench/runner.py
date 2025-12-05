@@ -92,6 +92,8 @@ class TaskRunner:
                 tokens_used=None,
                 duration_secs=duration,
                 error=f"Failed to prepare workspace: {e}",
+                agent_version=None,
+                model_name=None,
             )
 
         # Execute agent
@@ -106,6 +108,8 @@ class TaskRunner:
                 tokens_used=None,
                 duration_secs=duration,
                 error=f"Agent execution failed: {e}",
+                agent_version=None,
+                model_name=None,
             )
 
         # Run verification
@@ -120,6 +124,8 @@ class TaskRunner:
                 tokens_used=agent_result.tokens_used,
                 duration_secs=duration,
                 error=f"Verification failed: {e}",
+                agent_version=agent_result.agent_version,
+                model_name=agent_result.model_name,
             )
             result.with_agent_output(agent_result.output)
             path = result.save(self.config.results_dir)
@@ -136,6 +142,8 @@ class TaskRunner:
                 iterations=agent_result.iterations,
                 tokens_used=agent_result.tokens_used,
                 duration_secs=duration,
+                agent_version=agent_result.agent_version,
+                model_name=agent_result.model_name,
             )
         else:
             result = BenchmarkResult.create_failure(
@@ -145,6 +153,8 @@ class TaskRunner:
                 tokens_used=agent_result.tokens_used,
                 duration_secs=duration,
                 error="Verification tests failed",
+                agent_version=agent_result.agent_version,
+                model_name=agent_result.model_name,
             )
 
         result.with_agent_output(agent_result.output)

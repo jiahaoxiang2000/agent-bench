@@ -37,6 +37,8 @@ def write_csv(results: list[dict[str, Any]], output_path: Path) -> None:
     fieldnames = [
         "task_id",
         "agent",
+        "agent_version",
+        "model_name",
         "timestamp",
         "success",
         "score",
@@ -55,6 +57,8 @@ def write_csv(results: list[dict[str, Any]], output_path: Path) -> None:
             row = {
                 "task_id": result.get("task_id", ""),
                 "agent": result.get("agent", ""),
+                "agent_version": result.get("agent_version", ""),
+                "model_name": result.get("model_name", ""),
                 "timestamp": result.get("timestamp", ""),
                 "success": result.get("success", False),
                 "score": result.get("score", 0),

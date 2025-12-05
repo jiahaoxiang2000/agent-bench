@@ -98,6 +98,8 @@ class BenchmarkResult(BaseModel):
     agent_output: Optional[str] = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     error: Optional[str] = None
+    agent_version: Optional[str] = None
+    model_name: Optional[str] = None
 
     @classmethod
     def create_success(
@@ -107,6 +109,8 @@ class BenchmarkResult(BaseModel):
         iterations: int,
         tokens_used: Optional[int],
         duration_secs: float,
+        agent_version: Optional[str] = None,
+        model_name: Optional[str] = None,
     ) -> "BenchmarkResult":
         """Create a successful result."""
         return cls(
@@ -117,6 +121,8 @@ class BenchmarkResult(BaseModel):
             iterations=iterations,
             tokens_used=tokens_used,
             duration_secs=duration_secs,
+            agent_version=agent_version,
+            model_name=model_name,
         )
 
     @classmethod
@@ -128,6 +134,8 @@ class BenchmarkResult(BaseModel):
         tokens_used: Optional[int],
         duration_secs: float,
         error: str,
+        agent_version: Optional[str] = None,
+        model_name: Optional[str] = None,
     ) -> "BenchmarkResult":
         """Create a failed result."""
         return cls(
@@ -139,6 +147,8 @@ class BenchmarkResult(BaseModel):
             tokens_used=tokens_used,
             duration_secs=duration_secs,
             error=error,
+            agent_version=agent_version,
+            model_name=model_name,
         )
 
     def with_verification_output(self, output: str) -> "BenchmarkResult":
