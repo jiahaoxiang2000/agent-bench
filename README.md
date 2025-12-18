@@ -16,8 +16,7 @@ Agent Bench creates reproducible evaluation environments derived from authentic 
 
 ### Prerequisites
 
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) (fast Python package installer)
+- [Bun](https://bun.sh/) (>=1.0.0)
 - Git
 
 ### Installation
@@ -27,44 +26,39 @@ git clone https://github.com/jiahaoxiang2000/agent-bench.git
 cd agent-bench
 
 # Install dependencies
-uv sync
+bun install
 ```
 
 ### Usage
 
 ```bash
 # List available tasks
-uv run agent-bench list
+bun run src/index.ts list
 
 # Run a specific task
-uv run agent-bench run --task <task-id> --agent <agent-name>
+bun run src/index.ts run --task <task-id> --agent <agent-name>
 
 # Run full benchmark suite
-uv run agent-bench run --suite all --agent <agent-name>
+bun run src/index.ts run --suite all --agent <agent-name>
 
 # Collect results into CSV
-uv run agent-bench collect                    # Creates results/summary.csv
-uv run agent-bench collect -o output.csv      # Custom output path
+bun run src/index.ts collect                    # Creates results/summary.csv
+bun run src/index.ts collect -o output.csv      # Custom output path
 
-# Run with alternative API backends
-uv run agent-bench run --task <task-id> --agent claude-deepseek
-uv run agent-bench run --task <task-id> --agent claude-kimi
-uv run agent-bench run --task <task-id> --agent claude-bigmodel
+# Run with alternative API backends (via OpenCode SDK)
+bun run src/index.ts run --task <task-id> --agent claude-deepseek
+bun run src/index.ts run --task <task-id> --agent claude-kimi
+bun run src/index.ts run --task <task-id> --agent claude-bigmodel
 ```
 
 ### Supported Agents
 
-- **claude** - Standard Claude Code CLI
-- **claude-deepseek** - Claude CLI with DeepSeek API backend
-- **claude-kimi** - Claude CLI with Kimi (Moonshot) API backend
-- **claude-bigmodel** - Claude CLI with BigModel API backend
+- **claude** - OpenCode SDK with standard Claude
+- **claude-deepseek** - OpenCode SDK with DeepSeek API backend
+- **claude-kimi** - OpenCode SDK with Kimi (Moonshot) API backend
+- **claude-bigmodel** - OpenCode SDK with BigModel API backend
 
-**Note**: Alternative agents require corresponding shell aliases. For example:
-
-```bash
-# Add to ~/.bashrc or ~/.zshrc
-alias claude-deepseek='source ~/.token && ANTHROPIC_AUTH_TOKEN=$DEEPSEEK_AUTH_TOKEN ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic" ANTHROPIC_MODEL="deepseek-chat" ANTHROPIC_SMALL_FAST_MODEL="deepseek-chat" /path/to/claude'
-```
+**Note**: Requires corresponding API keys in environment or `.env` file. Alternative backends are configured automatically by the OpenCode SDK.
 
 ## Task Format
 
@@ -91,44 +85,63 @@ metadata:
   tags: ["python", "concurrency"]
 ```
 
-## Project Structure (MVP)
+## Project Structure
 
 ```
 agent-bench/
 ├── src/
-│   └── agent_bench/
-│       ├── __init__.py
-│       ├── cli.py              # Command-line interface
-│       ├── task.py             # Task model and loader
-│       ├── runner.py           # Task execution
-│       ├── collect_results.py  # Results aggregation
-│       ├── agents/             # Agent adapters
-│       │   ├── __init__.py
-│       │   └── claude.py
-│       └── evaluator.py        # Result verification
+│   ├── cli/
+│   │   └── commands/           # CLI commands
+│   │       ├── collect.ts
+│   │       ├── init.ts
+│   │       ├── list.ts
+│   │       ├── run.ts
+│   │       └── verify.ts
+│   │   └── index.ts            # CLI entry point
+│   ├── agents/
+│   │   ├── factory.ts          # Agent factory
+│   │   ├── opencode.ts         # OpenCode SDK adapter
+│   │   └── types.ts
+│   ├── core/
+│   │   ├── config.ts           # Configuration
+│   │   ├── loader.ts           # Task loader
+│   │   ├── runner.ts           # Task execution
+│   │   ├── task.ts             # Task model
+│   │   └── workspace.ts        # Workspace management
+│   ├── evaluator/
+│   │   ├── results.ts          # Result models
+│   │   └── verifier.ts         # Result verification
+│   └── utils/
+│       ├── errors.ts           # Custom errors
+│       └── logger.ts           # Logging
 ├── tasks/                      # Benchmark tasks (YAML format)
-│   └── examples/
+│   └── tools/
+│       └── find-os-001.yaml    # Example task
 ├── results/                    # Run outputs (JSON + CSV)
-├── pyproject.toml              # Project configuration
-└── uv.lock                     # Locked dependencies
+├── package.json                # Project configuration (Bun)
+└── tsconfig.json               # TypeScript configuration
 ```
 
-## Architecture (MVP)
+## Architecture
 
 ```mermaid
 flowchart LR
     subgraph CLI
         list[list]
         run[run]
+        collect[collect]
     end
 
     subgraph Core
-        task[Task Loader]
+        config[Config]
+        loader[Task Loader]
         runner[Runner]
+        workspace[Workspace]
     end
 
-    subgraph Agent
-        adapter[Agent Adapter]
+    subgraph Agents
+        factory[Factory]
+        opencode[OpenCode SDK]
     end
 
     subgraph Eval
@@ -137,8 +150,35 @@ flowchart LR
     end
 
     CLI --> Core
-    Core --> Agent
-    Agent --> Eval
+    Core --> Agents
+    Agents --> Eval
+```
+
+## Configuration
+
+The project uses TypeScript with strict mode enabled. All configuration is in:
+
+- `package.json` - Dependencies and scripts
+- `tsconfig.json` - TypeScript compiler options
+- `bunfig.toml` - Bun runtime configuration
+
+## Development
+
+```bash
+# Install dependencies
+bun install
+
+# Type check
+bun run typecheck
+
+# Run CLI in development
+bun run src/index.ts <command>
+
+# Run with debug output
+bun run src/index.ts --debug <command>
+
+# Build for production
+bun run build
 ```
 
 ## Evaluation Metrics
@@ -157,7 +197,7 @@ After running benchmarks, use the `collect` command to generate a CSV summary:
 
 ```bash
 # Generate CSV from all JSON results
-uv run agent-bench collect
+bun run src/index.ts collect
 
 # View results in terminal
 column -t -s, results/summary.csv
@@ -167,7 +207,7 @@ open results/summary.csv  # macOS
 xdg-open results/summary.csv  # Linux
 ```
 
-The CSV includes: task_id, agent, timestamp, success, score, iterations, duration, tokens, and errors.
+The CSV includes: task_id, agent, agent_version, model_name, timestamp, success, score, iterations, duration_secs, tokens_used, and error.
 
 ## Contributing Tasks
 
