@@ -28,7 +28,7 @@ export async function collectResults(resultsDir: string): Promise<BenchmarkResul
   for (const file of jsonFiles) {
     try {
       const result = await loadResult(join(resultsDir, file));
-      results.append(result);
+      results.push(result);
     } catch (error) {
       logger.warn(`Failed to load ${file}: ${error}`);
     }
@@ -98,3 +98,90 @@ export async function collectAndWrite(resultsDir: string, outputPath: string): P
 
   await writeCSV(results, outputPath);
 }
+
+/**
+ * Append a single result to the CSV file.
+ * Creates the file with header if it doesn't exist.
+ */
+export async function appendResultToCSV(result: BenchmarkResult, outputPath: string): Promise<void> {
+  try {
+    // Check if file exists
+    let existingContent = '';
+    try {
+      existingContent = await readFile(outputPath, 'utf-8');
+    } catch {
+      // File doesn't exist, will create with header
+    }
+
+    // Define CSV columns
+    const columns = [
+      'task_id',
+      'agent',
+      'agent_version',
+      'model_name',
+      'timestamp',
+      'success',
+      'score',
+      'iterations',
+      'duration_secs',
+      'tokens_used',
+      'error',
+    ];
+
+    // Convert result to CSV row
+    const row = {
+      task_id: result.task_id,
+      agent: result.agent,
+      agent_version: result.agent_version || '',
+      model_name: result.model_name || '',
+      timestamp: result.timestamp,
+      success: result.success,
+      score: result.score,
+      iterations: result.iterations,
+      duration_secs: result.duration_secs.toFixed(2),
+      tokens_used: result.tokens_used || '',
+      error: result.error ? result.error.substring(0, 100) : '',
+    };
+
+    // Check for duplicates
+    if (existingContent) {
+      const lines = existingContent.trim().split('\n');
+      // Skip header line, check data rows
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        const [existingTaskId, existingAgent, , , existingTimestamp] = line.split(',');
+        if (existingTaskId === result.task_id && 
+            existingAgent === result.agent && 
+            existingTimestamp === result.timestamp) {
+          // Duplicate found, skip
+          logger.debug(`Result already exists in CSV, skipping: ${result.task_id} (${result.agent})`);
+          return;
+        }
+      }
+    }
+
+    // Generate CSV for the new row
+    const { stringify } = await import('csv-stringify/sync');
+    const needsHeader = !existingContent;
+    const csv = stringify([row], {
+      header: needsHeader,
+      columns,
+    });
+
+    // Append to file
+    const { appendFile, writeFile } = await import('fs/promises');
+    if (needsHeader) {
+      await writeFile(outputPath, csv, 'utf-8');
+    } else {
+      // csv already has a trailing newline, just append it directly
+      await appendFile(outputPath, csv, 'utf-8');
+    }
+
+    logger.debug(`Appended result to CSV: ${result.task_id} (${result.agent})`);
+  } catch (error) {
+    logger.warn(`Failed to append to CSV: ${error}`);
+    // Don't throw - CSV append is best-effort
+  }
+}
+
+

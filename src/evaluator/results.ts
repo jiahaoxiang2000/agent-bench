@@ -118,6 +118,16 @@ export async function saveResult(result: BenchmarkResult, resultsDir: string): P
 
   await writeFile(path, JSON.stringify(result, null, 2), 'utf-8');
 
+  // Auto-append to summary CSV
+  try {
+    const { appendResultToCSV } = await import('../collectors/csv.js');
+    const csvPath = join(resultsDir, 'summary.csv');
+    await appendResultToCSV(result, csvPath);
+  } catch (error) {
+    // Log but don't fail the save operation
+    console.warn(`[WARN] Failed to auto-append to CSV: ${error}`);
+  }
+
   return path;
 }
 

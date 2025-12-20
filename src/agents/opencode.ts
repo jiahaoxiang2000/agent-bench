@@ -70,7 +70,7 @@ export class OpencodeAgent implements Agent {
 
     // Save current directory to restore later
     const originalCwd = process.cwd();
-    
+
     try {
       // Change to workspace directory before starting server
       // This ensures the OpenCode agent starts with the correct working directory
@@ -133,6 +133,10 @@ export class OpencodeAgent implements Agent {
       output: [],
     };
 
+    // Reset processed messages and parts for this task
+    this.processedMessages.clear();
+    this.processedStepFinishParts.clear();
+
     // Build agent configuration based on task permissions
     const agentType = this.selectAgentType(task);
 
@@ -165,12 +169,17 @@ export class OpencodeAgent implements Agent {
 
       // Get full conversation history after completion
       console.log(`Retrieving full conversation history...`);
-      const conversationOutput = await this.getConversationHistory(client, sessionId);
+      const conversationOutput = await this.getConversationHistory(
+        client,
+        sessionId,
+      );
 
       console.log(
         `Task completed: ${metrics.iterations} iterations, ${metrics.inputTokens + metrics.outputTokens} tokens`,
       );
-      console.log(`Agent output length: ${conversationOutput.length} characters`);
+      console.log(
+        `Agent output length: ${conversationOutput.length} characters`,
+      );
 
       return {
         success: true, // Will be determined by verification
@@ -219,6 +228,10 @@ export class OpencodeAgent implements Agent {
             await this.handleMessageUpdate(event, metrics);
             break;
 
+          case "message.part.updated":
+            await this.handleMessagePartUpdate(event, metrics);
+            break;
+
           case "session.idle":
             console.log(`Session idle - task completed`);
             return; // Session completed
@@ -243,6 +256,16 @@ export class OpencodeAgent implements Agent {
   }
 
   /**
+   * Track unique messages to avoid double-counting.
+   */
+  private processedMessages = new Set<string>();
+
+  /**
+   * Track unique step-finish parts to avoid double-counting tokens.
+   */
+  private processedStepFinishParts = new Set<string>();
+
+  /**
    * Handle message.updated event.
    */
   private async handleMessageUpdate(
@@ -253,30 +276,82 @@ export class OpencodeAgent implements Agent {
     const parts = event.properties?.parts || [];
 
     if (msg && msg.role === "assistant") {
+      // Check if we've already processed this message
+      const messageID = msg.id;
+      if (this.processedMessages.has(messageID)) {
+        return; // Skip duplicate updates for the same message
+      }
+
+      // Mark as processed
+      this.processedMessages.add(messageID);
+
       // Count this as an iteration
       metrics.iterations++;
 
-      // Accumulate tokens
+      // Accumulate tokens from message info
       if (msg.tokens) {
         metrics.inputTokens += msg.tokens.input || 0;
         metrics.outputTokens += msg.tokens.output || 0;
       }
 
-      // Accumulate cost
-      if (msg.cost) {
-        metrics.cost += msg.cost;
-      }
-
-      // Collect text output
+      // Also check for tokens in step-finish parts
       for (const part of parts) {
+        if (part.type === "step-finish" && part.tokens) {
+          const partID = part.id;
+          if (!this.processedStepFinishParts.has(partID)) {
+            this.processedStepFinishParts.add(partID);
+            metrics.inputTokens += part.tokens.input || 0;
+            metrics.outputTokens += part.tokens.output || 0;
+            metrics.cost += part.cost || 0;
+          }
+        }
+        // Collect text output
         if (part.type === "text" && part.text) {
           metrics.output.push(part.text);
         }
       }
 
+      // Accumulate cost from message info
+      if (msg.cost) {
+        metrics.cost += msg.cost;
+      }
+
       console.log(
         `  Iteration ${metrics.iterations}: ${metrics.inputTokens + metrics.outputTokens} tokens`,
       );
+    }
+  }
+
+  /**
+   * Handle message.part.updated event - specifically for step-finish parts with token info.
+   */
+  private async handleMessagePartUpdate(
+    event: any,
+    metrics: Metrics,
+  ): Promise<void> {
+    const part = event.properties?.part;
+
+    if (!part) return;
+
+    // Handle step-finish parts which contain token and cost information
+    if (part.type === "step-finish") {
+      const partID = part.id;
+
+      // Skip if already processed
+      if (this.processedStepFinishParts.has(partID)) {
+        return;
+      }
+
+      this.processedStepFinishParts.add(partID);
+
+      if (part.tokens) {
+        metrics.inputTokens += part.tokens.input || 0;
+        metrics.outputTokens += part.tokens.output || 0;
+      }
+
+      if (part.cost) {
+        metrics.cost += part.cost;
+      }
     }
   }
 
@@ -312,14 +387,14 @@ export class OpencodeAgent implements Agent {
           } else if (part.type === "tool") {
             // Include tool use information
             const toolUse = part as any;
-            messageParts.push(
-              `[Tool: ${toolUse.name || "unknown"}]`,
-            );
+            messageParts.push(`[Tool: ${toolUse.name || "unknown"}]`);
           }
         }
 
         if (messageParts.length > 0) {
-          conversationParts.push(`[${role.toUpperCase()}]\n${messageParts.join("\n")}`);
+          conversationParts.push(
+            `[${role.toUpperCase()}]\n${messageParts.join("\n")}`,
+          );
         }
       }
 
