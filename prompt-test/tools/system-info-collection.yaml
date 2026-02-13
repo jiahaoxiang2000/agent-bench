@@ -1,0 +1,53 @@
+name: System Information Collection
+description: Collect comprehensive system information using native tools
+category: tools
+difficulty: intermediate
+
+prompt: |
+  Use native command-line tools to collect comprehensive system information and save it to a file.
+  
+  1. **Required Information**:
+     - Operating system name and version
+     - Kernel version
+     - System architecture (CPU type)
+     - Total and available memory (RAM)
+     - Disk space (total, used, available for each mounted filesystem)
+     - CPU usage/count
+     - Hostname
+     - Current user
+     - System uptime
+     - Network interfaces and IP addresses
+  
+  2. **Tools to Use** (macOS):
+     - `uname` for kernel info
+     - `sysctl` for hardware info
+     - `df` for disk space
+     - `top` or `vm_stat` for memory
+     - `hostname` for hostname
+     - `whoami` for current user
+     - `uptime` for system uptime
+     - `ifconfig` or `ipconfig` for network
+  
+  3. **Output Requirements**:
+     - Format output as a clean report
+     - Use appropriate units (GB for disk/memory)
+     - Save to system_info.txt
+     - Include timestamp of when info was collected
+  
+  4. **Deliverable**:
+     - A shell script or commands executed
+     - system_info.txt file with all collected information
+
+evaluation:
+  success_criteria:
+    - All 10 categories of system info collected
+    - Output is properly formatted and readable
+    - File is saved as system_info.txt
+    - Timestamp is included
+    - Commands execute without errors
+
+  test_commands:
+    - Execute the commands
+    - Verify system_info.txt exists
+    - Check that all required info is present
+    - Verify format is clean and readable

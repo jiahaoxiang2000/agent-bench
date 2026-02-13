@@ -1,0 +1,44 @@
+name: Web Frontend Todo App
+description: Build a responsive todo list application with React
+category: coding
+difficulty: intermediate
+
+prompt: |
+  Create a fully functional Todo List application using React with the following requirements:
+  
+  1. **Core Features**:
+     - Add new todo items with title and optional description
+     - Mark todos as complete/incomplete
+     - Delete todo items
+     - Edit existing todo items (inline editing)
+     - Filter todos by: All, Active, Completed
+  
+  2. **UI Requirements**:
+     - Clean, modern design with CSS (use plain CSS or CSS modules, no Tailwind)
+     - Responsive layout that works on mobile and desktop
+     - Visual feedback for interactions (hover states, transitions)
+     - Empty state message when no todos exist
+  
+  3. **Technical Requirements**:
+     - Use React hooks (useState, useEffect)
+     - Implement localStorage persistence
+     - Show remaining todo count
+     - Clear all completed button
+  
+  4. **Deliverable**:
+     - Single HTML file with embedded React (via CDN) or a React project structure
+     - Code should be well-organized and commented
+
+evaluation:
+  success_criteria:
+    - All CRUD operations work correctly
+    - Data persists after page refresh
+    - Filter functionality works properly
+    - Responsive on mobile and desktop
+    - No console errors
+
+  test_commands:
+    - Open the HTML file in browser
+    - Add 3 todos, complete 1, delete 1
+    - Refresh page and verify data persists
+    - Test all filter options

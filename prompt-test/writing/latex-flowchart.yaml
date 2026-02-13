@@ -1,0 +1,51 @@
+name: LaTeX Flowchart Figure
+description: Create a flowchart using TikZ and compile to PDF
+category: writing
+difficulty: intermediate
+
+prompt: |
+  Create a LaTeX document that contains a professional flowchart using TikZ package. The flowchart should represent a typical software development workflow.
+  
+  1. **Flowchart Structure**:
+     - Start/End nodes (rounded rectangles)
+     - Process nodes (rectangles)
+     - Decision nodes (diamonds)
+     - Connector arrows with labels
+     
+  2. **Workflow Content** (Software Development Lifecycle):
+     - Start: Project Initiation
+     - Requirements Analysis (Process)
+     - Design (Process)
+     - Decision: Design Approved? (Decision)
+     - Development (Process)
+     - Testing (Process)
+     - Decision: Tests Pass? (Decision)
+     - Deployment (Process)
+     - Maintenance (Process)
+     - End: Project Complete
+  
+  3. **Technical Requirements**:
+     - Use tikz package with positioning library
+     - Proper node styling (colors, shapes)
+     - Arrow styling with labels
+     - Clean, professional appearance
+     - Include document title and caption
+  
+  4. **Deliverable**:
+     - Complete .tex file
+     - Compile to PDF successfully
+     - PDF file must be generated and viewable
+
+evaluation:
+  success_criteria:
+    - TikZ code is syntactically correct
+    - Flowchart shows complete workflow
+    - All nodes and connections are properly defined
+    - PDF compiles without errors
+    - PDF output is readable and professional
+
+  test_commands:
+    - Compile with: pdflatex filename.tex
+    - Verify PDF file is created
+    - Open PDF to verify content renders correctly
+    - Check that all workflow steps are visible
