@@ -122,7 +122,7 @@ export async function saveResult(result: BenchmarkResult, resultsDir: string): P
   // Auto-append to summary JSON
   try {
     const { appendResultToJSON } = await import('../collectors/json.js');
-    const jsonPath = join(resultsDir, 'summary.json');
+    const jsonPath = join(resultsDir, 'result.json');
     await appendResultToJSON(result, jsonPath);
   } catch (error) {
     // Log but don't fail the save operation

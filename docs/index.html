@@ -228,12 +228,12 @@
 
   async function load() {
     try {
-      const res = await fetch('summary.json');
+      const res = await fetch('result.json');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       allData = await res.json();
     } catch (e) {
       document.getElementById('tbody').innerHTML =
-        `<tr><td colspan="8" class="empty">Could not load summary.json: ${e.message}</td></tr>`;
+        `<tr><td colspan="8" class="empty">Could not load result.json: ${e.message}</td></tr>`;
       return;
     }
     populateFilters();
