@@ -22,7 +22,7 @@ Agent Bench creates reproducible evaluation environments derived from authentic 
 ### Installation
 
 ```bash
-git clone https://github.com/jiahaoxiang2000/agent-bench.git
+git clone https://github.com/isomoes/agent-bench.git
 cd agent-bench
 
 # Install dependencies
