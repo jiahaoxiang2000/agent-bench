@@ -108,24 +108,25 @@ export function withAgentOutput(result: BenchmarkResult, output: string): Benchm
  * @returns The path to the saved file
  */
 export async function saveResult(result: BenchmarkResult, resultsDir: string): Promise<string> {
-  await mkdir(resultsDir, { recursive: true });
+  const runsDir = join(resultsDir, 'runs');
+  await mkdir(runsDir, { recursive: true });
 
   const timestamp = new Date(result.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[0] +
                     '_' + new Date(result.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[1].split('Z')[0].substring(0, 6);
   const status = result.success ? 'pass' : 'fail';
   const filename = `${result.task_id}_${result.agent}_${timestamp}_${status}.json`;
-  const path = join(resultsDir, filename);
+  const path = join(runsDir, filename);
 
   await writeFile(path, JSON.stringify(result, null, 2), 'utf-8');
 
-  // Auto-append to summary CSV
+  // Auto-append to summary JSON
   try {
-    const { appendResultToCSV } = await import('../collectors/csv.js');
-    const csvPath = join(resultsDir, 'summary.csv');
-    await appendResultToCSV(result, csvPath);
+    const { appendResultToJSON } = await import('../collectors/json.js');
+    const jsonPath = join(resultsDir, 'summary.json');
+    await appendResultToJSON(result, jsonPath);
   } catch (error) {
     // Log but don't fail the save operation
-    console.warn(`[WARN] Failed to auto-append to CSV: ${error}`);
+    console.warn(`[WARN] Failed to auto-append to summary: ${error}`);
   }
 
   return path;

@@ -46,7 +46,6 @@ env/
 dmypy.json
 
 # Agent Bench specific
-results/*.json
 *.log
 *.tmp
 .benchmarks/
@@ -116,3 +115,4 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+results/runs

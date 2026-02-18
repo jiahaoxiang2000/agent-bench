@@ -1,0 +1,137 @@
+/**
+ * Collect and consolidate benchmark results into JSON format.
+ */
+
+import { readdir, readFile, writeFile } from 'fs/promises';
+import { join } from 'path';
+import type { BenchmarkResult } from '../evaluator/results.js';
+import { logger } from '../utils/logger.js';
+
+/**
+ * A single summary entry (successful runs only).
+ */
+export interface SummaryEntry {
+  task_id: string;
+  agent: string;
+  agent_version: string;
+  model_name: string;
+  timestamp: string;
+  iterations: number;
+  duration_secs: number;
+  tokens_used: number | null;
+}
+
+function toEntry(result: BenchmarkResult): SummaryEntry {
+  return {
+    task_id: result.task_id,
+    agent: result.agent,
+    agent_version: result.agent_version || '',
+    model_name: result.model_name || '',
+    timestamp: result.timestamp,
+    iterations: result.iterations,
+    duration_secs: parseFloat(result.duration_secs.toFixed(2)),
+    tokens_used: result.tokens_used,
+  };
+}
+
+/**
+ * Load a single result JSON file.
+ */
+async function loadResult(filePath: string): Promise<BenchmarkResult> {
+  const content = await readFile(filePath, 'utf-8');
+  return JSON.parse(content);
+}
+
+/**
+ * Collect all JSON result files from the runs/ subdirectory.
+ */
+export async function collectResults(resultsDir: string): Promise<BenchmarkResult[]> {
+  const runsDir = join(resultsDir, 'runs');
+  let files: string[];
+  try {
+    files = await readdir(runsDir);
+  } catch {
+    logger.warn(`Runs directory not found: ${runsDir}`);
+    return [];
+  }
+  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('suite_'));
+
+  const results: BenchmarkResult[] = [];
+
+  for (const file of jsonFiles) {
+    try {
+      const result = await loadResult(join(runsDir, file));
+      results.push(result);
+    } catch (error) {
+      logger.warn(`Failed to load ${file}: ${error}`);
+    }
+  }
+
+  return results.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+}
+
+/**
+ * Write successful results to a JSON summary file.
+ */
+export async function writeJSON(results: BenchmarkResult[], outputPath: string): Promise<void> {
+  const successResults = results.filter(r => r.success && r.error === null);
+
+  if (successResults.length === 0) {
+    logger.warn('No successful results to write');
+    return;
+  }
+
+  const entries = successResults.map(toEntry);
+  await writeFile(outputPath, JSON.stringify(entries, null, 2), 'utf-8');
+  logger.success(`Wrote ${entries.length} results to ${outputPath}`);
+}
+
+/**
+ * Collect and write results in one operation.
+ */
+export async function collectAndWrite(resultsDir: string, outputPath: string): Promise<void> {
+  logger.info(`Collecting results from ${resultsDir}...`);
+  const results = await collectResults(resultsDir);
+  logger.info(`Found ${results.length} result files`);
+  await writeJSON(results, outputPath);
+}
+
+/**
+ * Append a single successful result to the JSON summary file.
+ * Creates the file if it doesn't exist.
+ */
+export async function appendResultToJSON(result: BenchmarkResult, outputPath: string): Promise<void> {
+  // Skip error/failed results
+  if (!result.success || result.error !== null) {
+    logger.debug(`Skipping failed result from summary: ${result.task_id} (${result.agent})`);
+    return;
+  }
+
+  try {
+    // Load existing entries
+    let entries: SummaryEntry[] = [];
+    try {
+      const content = await readFile(outputPath, 'utf-8');
+      entries = JSON.parse(content);
+    } catch {
+      // File doesn't exist yet
+    }
+
+    // Check for duplicates
+    const isDuplicate = entries.some(
+      e => e.task_id === result.task_id &&
+           e.agent === result.agent &&
+           e.timestamp === result.timestamp
+    );
+    if (isDuplicate) {
+      logger.debug(`Result already exists in summary, skipping: ${result.task_id} (${result.agent})`);
+      return;
+    }
+
+    entries.push(toEntry(result));
+    await writeFile(outputPath, JSON.stringify(entries, null, 2), 'utf-8');
+    logger.debug(`Appended result to summary: ${result.task_id} (${result.agent})`);
+  } catch (error) {
+    logger.warn(`Failed to append to summary: ${error}`);
+  }
+}

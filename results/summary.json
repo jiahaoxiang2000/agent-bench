@@ -1,0 +1,72 @@
+[
+  {
+    "task_id": "TOOLS-001",
+    "agent": "opencode",
+    "agent_version": "@opencode-ai/sdk@1.0.169",
+    "model_name": "zhipuai-coding-plan/glm-4.6",
+    "timestamp": "2025-12-20T14:18:15.287Z",
+    "iterations": 6,
+    "duration_secs": 33.97,
+    "tokens_used": 26347
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent": "opencode",
+    "agent_version": "@opencode-ai/sdk@1.0.169",
+    "model_name": "mimo/mimo-v2-flash",
+    "timestamp": "2025-12-20T14:22:06.729Z",
+    "iterations": 5,
+    "duration_secs": 18.45,
+    "tokens_used": 57795
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent": "opencode",
+    "agent_version": "@opencode-ai/sdk@1.0.169",
+    "model_name": "deepseek/deepseek-chat",
+    "timestamp": "2025-12-20T14:26:33.482Z",
+    "iterations": 7,
+    "duration_secs": 30.65,
+    "tokens_used": 22021
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent": "opencode",
+    "agent_version": "@opencode-ai/sdk@1.0.169",
+    "model_name": "alibaba-cn/qwen3-coder-plus",
+    "timestamp": "2025-12-20T14:28:30.610Z",
+    "iterations": 6,
+    "duration_secs": 15.60,
+    "tokens_used": 24832
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent": "opencode",
+    "agent_version": "@opencode-ai/sdk@1.0.169",
+    "model_name": "moonshotai-cn/kimi-k2-thinking-turbo",
+    "timestamp": "2025-12-20T14:30:05.821Z",
+    "iterations": 4,
+    "duration_secs": 18.11,
+    "tokens_used": 42702
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent": "opencode",
+    "agent_version": "@opencode-ai/sdk@1.0.169",
+    "model_name": "anthropic/claude-sonnet-4-5",
+    "timestamp": "2025-12-20T14:34:10.901Z",
+    "iterations": 5,
+    "duration_secs": 29.07,
+    "tokens_used": 683
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent": "opencode",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-18T13:42:35.015Z",
+    "iterations": 4,
+    "duration_secs": 14.07,
+    "tokens_used": 348
+  }
+]

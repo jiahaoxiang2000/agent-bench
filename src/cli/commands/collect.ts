@@ -4,13 +4,13 @@
 
 import { Command } from 'commander';
 import { join } from 'path';
-import { collectAndWrite } from '../../collectors/csv.js';
+import { collectAndWrite } from '../../collectors/json.js';
 import { logger } from '../../utils/logger.js';
 
 export function createCollectCommand(resultsDir: string): Command {
   const command = new Command('collect')
-    .description('Collect benchmark results into CSV format')
-    .option('-o, --output <path>', 'Output CSV path', join(resultsDir, 'summary.csv'))
+    .description('Collect benchmark results into JSON summary')
+    .option('-o, --output <path>', 'Output JSON path', join(resultsDir, 'summary.json'))
     .action(async (options) => {
       try {
         await collectAndWrite(resultsDir, options.output);

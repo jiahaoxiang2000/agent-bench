@@ -1,7 +1,0 @@
-task_id,agent,agent_version,model_name,timestamp,success,score,iterations,duration_secs,tokens_used,error
-TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,zhipuai-coding-plan/glm-4.6,2025-12-20T14:18:15.287Z,1,100,6,33.97,26347,
-TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,mimo/mimo-v2-flash,2025-12-20T14:22:06.729Z,1,100,5,18.45,57795,
-TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,deepseek/deepseek-chat,2025-12-20T14:26:33.482Z,1,100,7,30.65,22021,
-TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,alibaba-cn/qwen3-coder-plus,2025-12-20T14:28:30.610Z,1,100,6,15.60,24832,
-TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,moonshotai-cn/kimi-k2-thinking-turbo,2025-12-20T14:30:05.821Z,1,100,4,18.11,42702,
-TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,anthropic/claude-sonnet-4-5,2025-12-20T14:34:10.901Z,1,100,5,29.07,683,

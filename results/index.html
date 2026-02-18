@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Bench Results</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto 2rem;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #f0f6fc;
+    }
+
+    header p {
+      margin-top: 0.4rem;
+      color: #8b949e;
+      font-size: 0.9rem;
+    }
+
+    /* Controls */
+    .controls {
+      max-width: 1100px;
+      margin: 0 auto 1.25rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .controls label {
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+
+    .controls select, .controls input {
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      border-radius: 6px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.85rem;
+    }
+
+    /* Stats bar */
+    .stats {
+      max-width: 1100px;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      min-width: 130px;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #58a6ff;
+      margin-top: 0.2rem;
+    }
+
+    /* Table */
+    .table-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead {
+      background: #161b22;
+    }
+
+    th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      color: #8b949e;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th:hover { color: #e6edf3; }
+
+    th .sort-icon { margin-left: 4px; opacity: 0.4; }
+    th.sorted .sort-icon { opacity: 1; color: #58a6ff; }
+
+    tbody tr {
+      border-top: 1px solid #21262d;
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: #161b22; }
+
+    td {
+      padding: 0.65rem 1rem;
+      color: #e6edf3;
+      white-space: nowrap;
+    }
+
+    td.task-id {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      color: #58a6ff;
+      font-size: 0.82rem;
+    }
+
+    td.model {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #c9d1d9;
+      font-size: 0.82rem;
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #c9d1d9;
+    }
+
+    td.tokens { color: #a5d6ff; }
+    td.duration { color: #7ee787; }
+
+    .empty {
+      text-align: center;
+      padding: 3rem;
+      color: #8b949e;
+    }
+
+    footer {
+      max-width: 1100px;
+      margin: 2rem auto 0;
+      font-size: 0.78rem;
+      color: #484f58;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Agent Bench Results</h1>
+  <p>Successful benchmark runs — sorted by most recent first</p>
+</header>
+
+<div class="stats">
+  <div class="stat-card"><div class="label">Total Runs</div><div class="value" id="stat-total">—</div></div>
+  <div class="stat-card"><div class="label">Tasks</div><div class="value" id="stat-tasks">—</div></div>
+  <div class="stat-card"><div class="label">Models</div><div class="value" id="stat-models">—</div></div>
+  <div class="stat-card"><div class="label">Avg Duration</div><div class="value" id="stat-duration">—</div></div>
+</div>
+
+<div class="controls">
+  <label>Task
+    <select id="filter-task"><option value="">All</option></select>
+  </label>
+  <label>Agent
+    <select id="filter-agent"><option value="">All</option></select>
+  </label>
+  <label>Model
+    <input id="filter-model" type="text" placeholder="filter model..." style="width:180px" />
+  </label>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th data-col="task_id">Task <span class="sort-icon">↕</span></th>
+        <th data-col="agent">Agent <span class="sort-icon">↕</span></th>
+        <th data-col="model_name">Model <span class="sort-icon">↕</span></th>
+        <th data-col="agent_version">Version <span class="sort-icon">↕</span></th>
+        <th data-col="timestamp">Timestamp <span class="sort-icon">↕</span></th>
+        <th data-col="iterations" class="num">Iterations <span class="sort-icon">↕</span></th>
+        <th data-col="duration_secs" class="num">Duration (s) <span class="sort-icon">↕</span></th>
+        <th data-col="tokens_used" class="num">Tokens <span class="sort-icon">↕</span></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<footer id="footer"></footer>
+
+<script>
+  let allData = [];
+  let sortCol = 'timestamp';
+  let sortAsc = false;
+
+  async function load() {
+    try {
+      const res = await fetch('summary.json');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      allData = await res.json();
+    } catch (e) {
+      document.getElementById('tbody').innerHTML =
+        `<tr><td colspan="8" class="empty">Could not load summary.json: ${e.message}</td></tr>`;
+      return;
+    }
+    populateFilters();
+    render();
+  }
+
+  function populateFilters() {
+    const tasks  = [...new Set(allData.map(d => d.task_id))].sort();
+    const agents = [...new Set(allData.map(d => d.agent))].sort();
+
+    const taskSel  = document.getElementById('filter-task');
+    const agentSel = document.getElementById('filter-agent');
+
+    tasks.forEach(t  => taskSel.insertAdjacentHTML('beforeend',  `<option>${t}</option>`));
+    agents.forEach(a => agentSel.insertAdjacentHTML('beforeend', `<option>${a}</option>`));
+
+    taskSel.addEventListener('change', render);
+    agentSel.addEventListener('change', render);
+    document.getElementById('filter-model').addEventListener('input', render);
+  }
+
+  function filtered() {
+    const task  = document.getElementById('filter-task').value;
+    const agent = document.getElementById('filter-agent').value;
+    const model = document.getElementById('filter-model').value.toLowerCase();
+
+    return allData.filter(d =>
+      (!task  || d.task_id === task) &&
+      (!agent || d.agent   === agent) &&
+      (!model || d.model_name.toLowerCase().includes(model))
+    );
+  }
+
+  function sorted(data) {
+    return [...data].sort((a, b) => {
+      let va = a[sortCol], vb = b[sortCol];
+      if (va == null) va = '';
+      if (vb == null) vb = '';
+      if (typeof va === 'number') return sortAsc ? va - vb : vb - va;
+      return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    });
+  }
+
+  function fmt(ts) {
+    const d = new Date(ts);
+    return d.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+  }
+
+  function render() {
+    const data = sorted(filtered());
+
+    // Stats
+    const tasks   = new Set(data.map(d => d.task_id)).size;
+    const models  = new Set(data.map(d => d.model_name)).size;
+    const avgDur  = data.length ? (data.reduce((s, d) => s + d.duration_secs, 0) / data.length).toFixed(1) : '—';
+
+    document.getElementById('stat-total').textContent    = data.length;
+    document.getElementById('stat-tasks').textContent    = tasks;
+    document.getElementById('stat-models').textContent   = models;
+    document.getElementById('stat-duration').textContent = data.length ? avgDur + 's' : '—';
+
+    // Table
+    const tbody = document.getElementById('tbody');
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="empty">No results match the current filters.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(d => `
+      <tr>
+        <td class="task-id">${esc(d.task_id)}</td>
+        <td>${esc(d.agent)}</td>
+        <td class="model" title="${esc(d.model_name)}">${esc(d.model_name)}</td>
+        <td class="model">${esc(d.agent_version)}</td>
+        <td>${fmt(d.timestamp)}</td>
+        <td class="num">${d.iterations}</td>
+        <td class="num duration">${d.duration_secs.toFixed(2)}</td>
+        <td class="num tokens">${d.tokens_used != null ? d.tokens_used.toLocaleString() : '—'}</td>
+      </tr>`).join('');
+
+    document.getElementById('footer').textContent =
+      `Last updated: ${fmt(new Date().toISOString())} · ${data.length} run(s) shown`;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Sort on header click
+  document.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) { sortAsc = !sortAsc; }
+      else { sortCol = col; sortAsc = col !== 'timestamp'; }
+
+      document.querySelectorAll('th').forEach(h => h.classList.remove('sorted'));
+      th.classList.add('sorted');
+      th.querySelector('.sort-icon').textContent = sortAsc ? '↑' : '↓';
+      render();
+    });
+  });
+
+  load();
+</script>
+</body>
+</html>
