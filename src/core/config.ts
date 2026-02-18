@@ -21,7 +21,7 @@ export interface RunnerConfig {
 export function createDefaultConfig(): RunnerConfig {
   return {
     tasksDir: join(process.cwd(), 'tasks'),
-    resultsDir: join(process.cwd(), 'results'),
+    resultsDir: join(process.cwd(), 'docs'),
     workspaceDir: join(tmpdir(), 'agent-bench'),
     maxIterations: 1,
   };
