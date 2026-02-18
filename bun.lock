@@ -5,20 +5,20 @@
     "": {
       "name": "agent-bench",
       "dependencies": {
-        "@opencode-ai/sdk": "^1.0.166",
-        "chalk": "^5.3.0",
-        "commander": "^12.0.0",
-        "csv-stringify": "^6.5.0",
-        "js-yaml": "^4.1.0",
-        "ora": "^8.0.0",
-        "simple-git": "^3.25.0",
-        "zod": "^3.22.0",
+        "@opencode-ai/sdk": "1.2.6",
+        "chalk": "5.6.2",
+        "commander": "12.1.0",
+        "csv-stringify": "6.6.0",
+        "js-yaml": "4.1.1",
+        "ora": "8.2.0",
+        "simple-git": "3.31.1",
+        "zod": "3.25.76",
       },
       "devDependencies": {
-        "@types/js-yaml": "^4.0.9",
-        "@types/node": "^22.0.0",
-        "bun-types": "latest",
-        "typescript": "^5.3.0",
+        "@types/js-yaml": "4.0.9",
+        "@types/node": "22.19.11",
+        "bun-types": "1.3.9",
+        "typescript": "5.9.3",
       },
     },
   },
@@ -27,17 +27,17 @@
 
     "@kwsites/promise-deferred": ["@kwsites/promise-deferred@1.1.1", "https://registry.npmmirror.com/@kwsites/promise-deferred/-/promise-deferred-1.1.1.tgz", {}, "sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw=="],
 
-    "@opencode-ai/sdk": ["@opencode-ai/sdk@1.0.169", "", {}, "sha512-c9XyrvQlZOQ+WxtD3io+VKkwhH1g82e9eNgczpXe3h+rkt5LANFgiwCGSHVArD0p/5FiPQPUEGk7mwqAjGL/GQ=="],
+    "@opencode-ai/sdk": ["@opencode-ai/sdk@1.2.6", "", {}, "sha512-dWMF8Aku4h7fh8sw5tQ2FtbqRLbIFT8FcsukpxTird49ax7oUXP+gzqxM/VdxHjfksQvzLBjLZyMdDStc5g7xA=="],
 
     "@types/js-yaml": ["@types/js-yaml@4.0.9", "https://registry.npmmirror.com/@types/js-yaml/-/js-yaml-4.0.9.tgz", {}, "sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg=="],
 
-    "@types/node": ["@types/node@22.19.3", "https://registry.npmmirror.com/@types/node/-/node-22.19.3.tgz", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-1N9SBnWYOJTrNZCdh/yJE+t910Y128BoyY+zBLWhL3r0TYzlTmFdXrPwHL9DyFZmlEXNQQolTZh3KHV31QDhyA=="],
+    "@types/node": ["@types/node@22.19.11", "https://registry.npmmirror.com/@types/node/-/node-22.19.11.tgz", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-BH7YwL6rA93ReqeQS1c4bsPpcfOmJasG+Fkr6Y59q83f9M1WcBRHR2vM+P9eOisYRcN3ujQoiZY8uk5W+1WL8w=="],
 
     "ansi-regex": ["ansi-regex@6.2.2", "https://registry.npmmirror.com/ansi-regex/-/ansi-regex-6.2.2.tgz", {}, "sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg=="],
 
     "argparse": ["argparse@2.0.1", "https://registry.npmmirror.com/argparse/-/argparse-2.0.1.tgz", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 
-    "bun-types": ["bun-types@1.3.5", "https://registry.npmmirror.com/bun-types/-/bun-types-1.3.5.tgz", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
+    "bun-types": ["bun-types@1.3.9", "https://registry.npmmirror.com/bun-types/-/bun-types-1.3.9.tgz", { "dependencies": { "@types/node": "*" } }, "sha512-+UBWWOakIP4Tswh0Bt0QD0alpTY8cb5hvgiYeWCMet9YukHbzuruIEeXC2D7nMJPB12kbh8C7XJykSexEqGKJg=="],
 
     "chalk": ["chalk@5.6.2", "https://registry.npmmirror.com/chalk/-/chalk-5.6.2.tgz", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],
 
@@ -75,7 +75,7 @@
 
     "signal-exit": ["signal-exit@4.1.0", "https://registry.npmmirror.com/signal-exit/-/signal-exit-4.1.0.tgz", {}, "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="],
 
-    "simple-git": ["simple-git@3.30.0", "https://registry.npmmirror.com/simple-git/-/simple-git-3.30.0.tgz", { "dependencies": { "@kwsites/file-exists": "^1.1.1", "@kwsites/promise-deferred": "^1.1.1", "debug": "^4.4.0" } }, "sha512-q6lxyDsCmEal/MEGhP1aVyQ3oxnagGlBDOVSIB4XUVLl1iZh0Pah6ebC9V4xBap/RfgP2WlI8EKs0WS0rMEJHg=="],
+    "simple-git": ["simple-git@3.31.1", "https://registry.npmmirror.com/simple-git/-/simple-git-3.31.1.tgz", { "dependencies": { "@kwsites/file-exists": "^1.1.1", "@kwsites/promise-deferred": "^1.1.1", "debug": "^4.4.0" } }, "sha512-oiWP4Q9+kO8q9hHqkX35uuHmxiEbZNTrZ5IPxgMGrJwN76pzjm/jabkZO0ItEcqxAincqGAzL3QHSaHt4+knBg=="],
 
     "stdin-discarder": ["stdin-discarder@0.2.2", "https://registry.npmmirror.com/stdin-discarder/-/stdin-discarder-0.2.2.tgz", {}, "sha512-UhDfHmA92YAlNnCfhmq0VeNL5bDbiZGg7sZ2IvPsXubGkiNa9EC+tUTsjBRsYUAz87btI6/1wf4XoVvQ3uRnmQ=="],
 
