@@ -52,7 +52,6 @@ export async function writeCSV(results: BenchmarkResult[], outputPath: string): 
   // Define CSV columns
   const columns = [
     'task_id',
-    'agent',
     'agent_version',
     'model_name',
     'timestamp',
@@ -64,7 +63,6 @@ export async function writeCSV(results: BenchmarkResult[], outputPath: string): 
   // Convert results to CSV rows
   const rows = successResults.map(result => ({
     task_id: result.task_id,
-    agent: result.agent,
     agent_version: result.agent_version || '',
     model_name: result.model_name || '',
     timestamp: result.timestamp,
@@ -119,7 +117,6 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
     // Define CSV columns
     const columns = [
       'task_id',
-      'agent',
       'agent_version',
       'model_name',
       'timestamp',
@@ -131,7 +128,6 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
     // Convert result to CSV row
     const row = {
       task_id: result.task_id,
-      agent: result.agent,
       agent_version: result.agent_version || '',
       model_name: result.model_name || '',
       timestamp: result.timestamp,
@@ -146,12 +142,11 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
       // Skip header line, check data rows
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i];
-        const [existingTaskId, existingAgent, , , existingTimestamp] = line.split(',');
+        const [existingTaskId, , , existingTimestamp] = line.split(',');
         if (existingTaskId === result.task_id && 
-            existingAgent === result.agent && 
             existingTimestamp === result.timestamp) {
           // Duplicate found, skip
-          logger.debug(`Result already exists in CSV, skipping: ${result.task_id} (${result.agent})`);
+          logger.debug(`Result already exists in CSV, skipping: ${result.task_id}`);
           return;
         }
       }
@@ -174,7 +169,7 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
       await appendFile(outputPath, csv, 'utf-8');
     }
 
-    logger.debug(`Appended result to CSV: ${result.task_id} (${result.agent})`);
+    logger.debug(`Appended result to CSV: ${result.task_id}`);
   } catch (error) {
     logger.warn(`Failed to append to CSV: ${error}`);
     // Don't throw - CSV append is best-effort

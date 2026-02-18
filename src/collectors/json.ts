@@ -12,7 +12,6 @@ import { logger } from '../utils/logger.js';
  */
 export interface SummaryEntry {
   task_id: string;
-  agent: string;
   agent_version: string;
   model_name: string;
   timestamp: string;
@@ -24,7 +23,6 @@ export interface SummaryEntry {
 function toEntry(result: BenchmarkResult): SummaryEntry {
   return {
     task_id: result.task_id,
-    agent: result.agent,
     agent_version: result.agent_version || '',
     model_name: result.model_name || '',
     timestamp: result.timestamp,
@@ -120,17 +118,16 @@ export async function appendResultToJSON(result: BenchmarkResult, outputPath: st
     // Check for duplicates
     const isDuplicate = entries.some(
       e => e.task_id === result.task_id &&
-           e.agent === result.agent &&
            e.timestamp === result.timestamp
     );
     if (isDuplicate) {
-      logger.debug(`Result already exists in summary, skipping: ${result.task_id} (${result.agent})`);
+      logger.debug(`Result already exists in summary, skipping: ${result.task_id}`);
       return;
     }
 
     entries.push(toEntry(result));
     await writeFile(outputPath, JSON.stringify(entries, null, 2), 'utf-8');
-    logger.debug(`Appended result to summary: ${result.task_id} (${result.agent})`);
+    logger.debug(`Appended result to summary: ${result.task_id}`);
   } catch (error) {
     logger.warn(`Failed to append to summary: ${error}`);
   }

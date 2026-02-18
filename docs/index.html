@@ -193,9 +193,6 @@
   <label>Task
     <select id="filter-task"><option value="">All</option></select>
   </label>
-  <label>Agent
-    <select id="filter-agent"><option value="">All</option></select>
-  </label>
   <label>Model
     <input id="filter-model" type="text" placeholder="filter model..." style="width:180px" />
   </label>
@@ -206,7 +203,6 @@
     <thead>
       <tr>
         <th data-col="task_id">Task <span class="sort-icon">↕</span></th>
-        <th data-col="agent">Agent <span class="sort-icon">↕</span></th>
         <th data-col="model_name">Model <span class="sort-icon">↕</span></th>
         <th data-col="agent_version">Version <span class="sort-icon">↕</span></th>
         <th data-col="timestamp">Timestamp <span class="sort-icon">↕</span></th>
@@ -233,7 +229,7 @@
       allData = await res.json();
     } catch (e) {
       document.getElementById('tbody').innerHTML =
-        `<tr><td colspan="8" class="empty">Could not load result.json: ${e.message}</td></tr>`;
+        `<tr><td colspan="7" class="empty">Could not load result.json: ${e.message}</td></tr>`;
       return;
     }
     populateFilters();
@@ -241,28 +237,19 @@
   }
 
   function populateFilters() {
-    const tasks  = [...new Set(allData.map(d => d.task_id))].sort();
-    const agents = [...new Set(allData.map(d => d.agent))].sort();
-
-    const taskSel  = document.getElementById('filter-task');
-    const agentSel = document.getElementById('filter-agent');
-
-    tasks.forEach(t  => taskSel.insertAdjacentHTML('beforeend',  `<option>${t}</option>`));
-    agents.forEach(a => agentSel.insertAdjacentHTML('beforeend', `<option>${a}</option>`));
-
+    const tasks = [...new Set(allData.map(d => d.task_id))].sort();
+    const taskSel = document.getElementById('filter-task');
+    tasks.forEach(t => taskSel.insertAdjacentHTML('beforeend', `<option>${t}</option>`));
     taskSel.addEventListener('change', render);
-    agentSel.addEventListener('change', render);
     document.getElementById('filter-model').addEventListener('input', render);
   }
 
   function filtered() {
     const task  = document.getElementById('filter-task').value;
-    const agent = document.getElementById('filter-agent').value;
     const model = document.getElementById('filter-model').value.toLowerCase();
 
     return allData.filter(d =>
       (!task  || d.task_id === task) &&
-      (!agent || d.agent   === agent) &&
       (!model || d.model_name.toLowerCase().includes(model))
     );
   }
@@ -298,14 +285,13 @@
     // Table
     const tbody = document.getElementById('tbody');
     if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="empty">No results match the current filters.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="empty">No results match the current filters.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = data.map(d => `
       <tr>
         <td class="task-id">${esc(d.task_id)}</td>
-        <td>${esc(d.agent)}</td>
         <td class="model" title="${esc(d.model_name)}">${esc(d.model_name)}</td>
         <td class="model">${esc(d.agent_version)}</td>
         <td>${fmt(d.timestamp)}</td>
