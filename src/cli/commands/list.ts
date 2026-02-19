@@ -28,10 +28,12 @@ export function createListCommand(tasksDir: string): Command {
           tasks = tasks.filter(t => t.difficulty === options.difficulty);
         }
         if (options.tags) {
-          const filterTags = options.tags.split(',').map((t: string) => t.trim());
+          const filterTags: string[] = String(options.tags)
+            .split(',')
+            .map((t: string) => t.trim());
           tasks = tasks.filter(task => {
             const taskTags = task.metadata?.tags || [];
-            return filterTags.some(tag => taskTags.includes(tag));
+            return filterTags.some((tag: string) => taskTags.includes(tag));
           });
         }
 

@@ -113,12 +113,13 @@ export function deriveRunPath(taskId: string): string {
 
 /**
  * Derive the verification command for a task from its ID.
- * "TOOLS-001" → "python3 TOOLS/001/verify.py"
+ * Verification runs from the task's run_path, so the script path is local.
+ * "TOOLS-001" → "python3 verify.py"
  * @param taskId The task ID
  * @returns The shell command to run the verification script
  */
-export function deriveVerifyCommand(taskId: string): string {
-  return `python3 ${deriveRunPath(taskId)}/verify.py`;
+export function deriveVerifyCommand(_taskId: string): string {
+  return 'python3 verify.py';
 }
 
 /**

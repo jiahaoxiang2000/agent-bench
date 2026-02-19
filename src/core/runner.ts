@@ -205,7 +205,7 @@ export class TaskRunner {
       } else {
         logger.info('Running verification...');
         try {
-          const verification = await Verifier.verify(task, agentPath);
+          const verification = await Verifier.verify(task, workspacePath);
 
           if (verification.passed) {
             logger.success('Verification passed');
