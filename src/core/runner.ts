@@ -19,7 +19,7 @@ import {
 } from '../evaluator/results.js';
 import type { RunnerConfig } from './config.js';
 import { logger } from '../utils/logger.js';
-import { AgentError } from '../utils/errors.js';
+
 
 /**
  * Task runner for executing benchmarks.
@@ -205,7 +205,7 @@ export class TaskRunner {
       } else {
         logger.info('Running verification...');
         try {
-          const verification = await Verifier.verify(task, workspacePath);
+          const verification = await Verifier.verify(task, agentPath);
 
           if (verification.passed) {
             logger.success('Verification passed');
@@ -265,9 +265,18 @@ export class TaskRunner {
       const resultPath = await saveResult(result, this.config.resultsDir);
       logger.debug(`Result saved to: ${resultPath}`);
 
+      // Only clean up workspace on success; preserve it on failure for debugging
+      if (result.success) {
+        await this.workspace.cleanup(task);
+      } else {
+        logger.warn(`Task failed — workspace preserved for debugging: ${agentPath}`);
+      }
+
       return result;
-    } finally {
-      await this.workspace.cleanup(task);
+    } catch (error) {
+      // Unexpected error — preserve workspace for debugging
+      logger.warn(`Unexpected error — workspace preserved for debugging: ${workspacePath}`);
+      throw error;
     }
   }
 
