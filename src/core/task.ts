@@ -7,7 +7,7 @@ import { z } from 'zod';
 /**
  * Task category classification.
  */
-export const TaskCategorySchema = z.enum(['bug-fix', 'feature', 'refactor', 'tools']);
+export const TaskCategorySchema = z.enum(['coding', 'writing', 'tools', 'bug-fix', 'feature', 'refactor']);
 export type TaskCategory = z.infer<typeof TaskCategorySchema>;
 
 /**

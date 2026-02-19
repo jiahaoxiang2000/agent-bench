@@ -48,7 +48,7 @@ export class TaskLoader {
 
       if (entry.isDirectory()) {
         await this.loadRecursive(fullPath, tasks);
-      } else if (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml')) {
+      } else if (entry.name === 'task.yaml' || entry.name === 'task.yml') {
         try {
           const task = await this.loadFromFile(fullPath);
           tasks.push(task);
