@@ -251,5 +251,93 @@
     "tokens_used": 1888,
     "input_tokens": 1071,
     "output_tokens": 817
+  },
+  {
+    "task_id": "TOOLS-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:55:51.183Z",
+    "iterations": 6,
+    "duration_secs": 33.81,
+    "tokens_used": 2707,
+    "input_tokens": 1239,
+    "output_tokens": 1468
+  },
+  {
+    "task_id": "TOOLS-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:56:10.741Z",
+    "iterations": 4,
+    "duration_secs": 16.57,
+    "tokens_used": 820,
+    "input_tokens": 519,
+    "output_tokens": 301
+  },
+  {
+    "task_id": "CODING-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:57:07.374Z",
+    "iterations": 7,
+    "duration_secs": 54.19,
+    "tokens_used": 2187,
+    "input_tokens": 1293,
+    "output_tokens": 894
+  },
+  {
+    "task_id": "CODING-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:57:46.198Z",
+    "iterations": 5,
+    "duration_secs": 35.64,
+    "tokens_used": 2698,
+    "input_tokens": 1027,
+    "output_tokens": 1671
+  },
+  {
+    "task_id": "CODING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:58:47.833Z",
+    "iterations": 5,
+    "duration_secs": 56.88,
+    "tokens_used": 3083,
+    "input_tokens": 1653,
+    "output_tokens": 1430
+  },
+  {
+    "task_id": "WRITING-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:59:13.220Z",
+    "iterations": 2,
+    "duration_secs": 22.59,
+    "tokens_used": 583,
+    "input_tokens": 183,
+    "output_tokens": 400
+  },
+  {
+    "task_id": "WRITING-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:59:34.825Z",
+    "iterations": 3,
+    "duration_secs": 17.89,
+    "tokens_used": 702,
+    "input_tokens": 272,
+    "output_tokens": 430
+  },
+  {
+    "task_id": "WRITING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T14:00:01.467Z",
+    "iterations": 5,
+    "duration_secs": 24.18,
+    "tokens_used": 1030,
+    "input_tokens": 580,
+    "output_tokens": 450
   }
 ]
