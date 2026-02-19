@@ -98,27 +98,28 @@ export function createRunCommand(config: RunnerConfig): Command {
 
           process.exit(allPassed ? 0 : 1);
         } else if (options.suite) {
-          const agent = createAgent(models[0]);
-
-          if (models.length > 1) {
-            logger.warn('Multi-model parallel execution is currently supported for --task only.');
-            logger.warn(`Using first model for suite run: ${models[0]}`);
-          }
-
           // Run suite
           if (options.suite === 'all') {
             logger.info('Running all tasks');
-            logger.info(`Using model: ${models[0]}`);
+            logger.info(`Using model(s): ${models.join(', ')}`);
             logger.info(`Skip verification: ${skipVerify}\n`);
 
-            await runner.runAll(agent, skipVerify);
+            for (const model of models) {
+              logger.info(`Starting suite run for model: ${model}`);
+              const agent = createAgent(model);
+              await runner.runAll(agent, skipVerify, model);
+            }
           } else {
             // Run category suite
             logger.info(`Running category: ${options.suite}`);
-            logger.info(`Using model: ${models[0]}`);
+            logger.info(`Using model(s): ${models.join(', ')}`);
             logger.info(`Skip verification: ${skipVerify}\n`);
 
-            await runner.runCategory(options.suite, agent, skipVerify);
+            for (const model of models) {
+              logger.info(`Starting category run for model: ${model}`);
+              const agent = createAgent(model);
+              await runner.runCategory(options.suite, agent, skipVerify, model);
+            }
           }
         } else {
           logger.error('Please specify either --task or --suite');

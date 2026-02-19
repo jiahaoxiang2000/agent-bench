@@ -66,17 +66,18 @@ export class TaskRunner {
   /**
    * Run all tasks.
    */
-  async runAll(agent: Agent, skipVerify: boolean = false): Promise<void> {
+  async runAll(agent: Agent, skipVerify: boolean = false, runId?: string): Promise<void> {
     const tasks = await this.loader.loadAll();
 
-    logger.info(`Running ${tasks.length} tasks with agent: ${agent.name()}`);
+    const runLabel = runId ? `${agent.name()} (${runId})` : agent.name();
+    logger.info(`Running ${tasks.length} tasks with agent: ${runLabel}`);
 
     const results: BenchmarkResult[] = [];
 
     for (const task of tasks) {
       logger.taskHeader(task.id, task.title);
 
-      const result = await this.executeTask(task, agent, skipVerify);
+      const result = await this.executeTask(task, agent, skipVerify, runId);
       results.push(result);
 
       logger.taskResult(
@@ -89,7 +90,7 @@ export class TaskRunner {
     }
 
     // Save suite results
-    const suite = createSuiteResults(agent.name(), results);
+    const suite = createSuiteResults(runLabel, results);
     const suitePath = await saveSuiteResults(suite, this.config.resultsDir);
 
     logger.suiteSummary(
@@ -106,7 +107,12 @@ export class TaskRunner {
   /**
    * Run tasks by category.
    */
-  async runCategory(category: string, agent: Agent, skipVerify: boolean = false): Promise<void> {
+  async runCategory(
+    category: string,
+    agent: Agent,
+    skipVerify: boolean = false,
+    runId?: string
+  ): Promise<void> {
     const tasks = await this.loader.filterByCategory(category);
 
     if (tasks.length === 0) {
@@ -114,14 +120,15 @@ export class TaskRunner {
       return;
     }
 
-    logger.info(`Running ${tasks.length} tasks in category "${category}"`);
+    const runLabel = runId ? `${agent.name()} (${runId})` : agent.name();
+    logger.info(`Running ${tasks.length} tasks in category "${category}" with agent: ${runLabel}`);
 
     const results: BenchmarkResult[] = [];
 
     for (const task of tasks) {
       logger.taskHeader(task.id, task.title);
 
-      const result = await this.executeTask(task, agent, skipVerify);
+      const result = await this.executeTask(task, agent, skipVerify, runId);
       results.push(result);
 
       logger.taskResult(
@@ -134,7 +141,7 @@ export class TaskRunner {
     }
 
     // Save suite results
-    const suite = createSuiteResults(agent.name(), results);
+    const suite = createSuiteResults(runLabel, results);
     const suitePath = await saveSuiteResults(suite, this.config.resultsDir);
 
     logger.suiteSummary(
