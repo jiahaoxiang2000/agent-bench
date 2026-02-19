@@ -196,12 +196,10 @@ export async function saveSuiteResults(suite: SuiteResults, resultsDir: string):
   const timestamp = formatTimestamp(suite.timestamp);
   const agent = sanitizeForFilename(suite.agent);
   const filename = `suite_${agent}_${timestamp}.json`;
-  const path = join(resultsDir, filename);
   const runsPath = join(runsDir, filename);
   const payload = JSON.stringify(suite, null, 2);
 
-  await writeFile(path, payload, 'utf-8');
   await writeFile(runsPath, payload, 'utf-8');
 
-  return path;
+  return runsPath;
 }
