@@ -41,7 +41,6 @@ interface Metrics {
   inputTokens: number;
   outputTokens: number;
   cost: number;
-  output: string[];
 }
 
 /**
@@ -125,23 +124,11 @@ export class OpencodeAgent implements Agent {
     const sessionId = sessionResponse.data.id;
     console.log(`Session created: ${sessionId}`);
 
-    const metrics: Metrics = {
-      iterations: 0,
-      inputTokens: 0,
-      outputTokens: 0,
-      cost: 0,
-      output: [],
-    };
-
-    // Reset processed messages and parts for this task
-    this.processedMessages.clear();
-    this.processedStepFinishParts.clear();
-
     // Build agent configuration based on task permissions
     const agentType = this.selectAgentType(task);
 
-    // Start event stream subscription for metrics collection
-    const eventPromise = this.captureMetrics(client, workspace, metrics);
+    // Start event stream subscription to detect session completion
+    const eventPromise = this.waitForSessionIdle(client);
 
     try {
       // Send task prompt
@@ -167,12 +154,10 @@ export class OpencodeAgent implements Agent {
 
       const durationSecs = (Date.now() - startTime) / 1000;
 
-      // Get full conversation history after completion
+      // Get full conversation history and compute metrics from completed messages
       console.log(`Retrieving full conversation history...`);
-      const conversationOutput = await this.getConversationHistory(
-        client,
-        sessionId,
-      );
+      const { output: conversationOutput, metrics } =
+        await this.getConversationHistoryAndMetrics(client, sessionId);
 
       console.log(
         `Task completed: ${metrics.iterations} iterations, ${metrics.inputTokens + metrics.outputTokens} tokens`,
@@ -186,6 +171,8 @@ export class OpencodeAgent implements Agent {
         output: conversationOutput,
         iterations: metrics.iterations,
         tokensUsed: metrics.inputTokens + metrics.outputTokens,
+        inputTokens: metrics.inputTokens,
+        outputTokens: metrics.outputTokens,
         cost: metrics.cost,
         durationSecs,
         agentVersion: getOpencodeVersion(),
@@ -208,33 +195,19 @@ export class OpencodeAgent implements Agent {
   }
 
   /**
-   * Subscribe to event stream and capture metrics.
+   * Subscribe to event stream and wait for session.idle (task complete).
    */
-  private async captureMetrics(
-    client: OpencodeClient,
-    _workspace: string,
-    metrics: Metrics,
-  ): Promise<void> {
+  private async waitForSessionIdle(client: OpencodeClient): Promise<void> {
     console.log(`Subscribing to event stream...`);
 
     try {
-      // Subscribe to SSE event stream
       const eventStream = await client.event.subscribe({});
 
       for await (const event of eventStream.stream) {
-        // Handle different event types
         switch (event.type) {
-          case "message.updated":
-            await this.handleMessageUpdate(event, metrics);
-            break;
-
-          case "message.part.updated":
-            await this.handleMessagePartUpdate(event, metrics);
-            break;
-
           case "session.idle":
             console.log(`Session idle - task completed`);
-            return; // Session completed
+            return;
 
           case "session.error":
             const errorMsg =
@@ -242,7 +215,6 @@ export class OpencodeAgent implements Agent {
             throw new AgentError(`Session error: ${errorMsg}`);
 
           default:
-            // Ignore other event types
             break;
         }
       }
@@ -250,159 +222,111 @@ export class OpencodeAgent implements Agent {
       if (error instanceof AgentError) {
         throw error;
       }
-      // If stream ends normally, that's fine
       console.log(`Event stream ended`);
     }
   }
 
   /**
-   * Track unique messages to avoid double-counting.
+   * Recursively collect all session IDs in the tree rooted at sessionId
+   * (the root session plus all subagent child sessions).
    */
-  private processedMessages = new Set<string>();
-
-  /**
-   * Track unique step-finish parts to avoid double-counting tokens.
-   */
-  private processedStepFinishParts = new Set<string>();
-
-  /**
-   * Handle message.updated event.
-   */
-  private async handleMessageUpdate(
-    event: any,
-    metrics: Metrics,
-  ): Promise<void> {
-    const msg = event.properties?.info;
-    const parts = event.properties?.parts || [];
-
-    if (msg && msg.role === "assistant") {
-      // Check if we've already processed this message
-      const messageID = msg.id;
-      if (this.processedMessages.has(messageID)) {
-        return; // Skip duplicate updates for the same message
-      }
-
-      // Mark as processed
-      this.processedMessages.add(messageID);
-
-      // Count this as an iteration
-      metrics.iterations++;
-
-      // Accumulate tokens from message info
-      if (msg.tokens) {
-        metrics.inputTokens += msg.tokens.input || 0;
-        metrics.outputTokens += msg.tokens.output || 0;
-      }
-
-      // Also check for tokens in step-finish parts
-      for (const part of parts) {
-        if (part.type === "step-finish" && part.tokens) {
-          const partID = part.id;
-          if (!this.processedStepFinishParts.has(partID)) {
-            this.processedStepFinishParts.add(partID);
-            metrics.inputTokens += part.tokens.input || 0;
-            metrics.outputTokens += part.tokens.output || 0;
-            metrics.cost += part.cost || 0;
-          }
-        }
-        // Collect text output
-        if (part.type === "text" && part.text) {
-          metrics.output.push(part.text);
-        }
-      }
-
-      // Accumulate cost from message info
-      if (msg.cost) {
-        metrics.cost += msg.cost;
-      }
-
-      console.log(
-        `  Iteration ${metrics.iterations}: ${metrics.inputTokens + metrics.outputTokens} tokens`,
-      );
-    }
-  }
-
-  /**
-   * Handle message.part.updated event - specifically for step-finish parts with token info.
-   */
-  private async handleMessagePartUpdate(
-    event: any,
-    metrics: Metrics,
-  ): Promise<void> {
-    const part = event.properties?.part;
-
-    if (!part) return;
-
-    // Handle step-finish parts which contain token and cost information
-    if (part.type === "step-finish") {
-      const partID = part.id;
-
-      // Skip if already processed
-      if (this.processedStepFinishParts.has(partID)) {
-        return;
-      }
-
-      this.processedStepFinishParts.add(partID);
-
-      if (part.tokens) {
-        metrics.inputTokens += part.tokens.input || 0;
-        metrics.outputTokens += part.tokens.output || 0;
-      }
-
-      if (part.cost) {
-        metrics.cost += part.cost;
-      }
-    }
-  }
-
-  /**
-   * Get full conversation history from session.
-   */
-  private async getConversationHistory(
+  private async collectAllSessionIds(
     client: OpencodeClient,
     sessionId: string,
-  ): Promise<string> {
+  ): Promise<string[]> {
+    const ids: string[] = [sessionId];
     try {
-      const messagesResponse = await client.session.messages({
+      const childrenResponse = await client.session.children({
         path: { id: sessionId },
       });
-
-      if (!messagesResponse.data) {
-        console.warn("No messages data returned from session");
-        return "";
+      for (const child of childrenResponse.data ?? []) {
+        const childIds = await this.collectAllSessionIds(client, child.id);
+        ids.push(...childIds);
       }
+    } catch (error) {
+      console.warn(
+        `Failed to fetch children for session ${sessionId}: ${error}`,
+      );
+    }
+    return ids;
+  }
 
-      const messages = messagesResponse.data;
-      const conversationParts: string[] = [];
+  /**
+   * Get full conversation history and compute metrics from completed session messages.
+   * Includes all subagent child sessions so token counts are accurate.
+   * Token counts and cost are read from AssistantMessage fields which are only
+   * fully populated after the message is complete.
+   */
+  private async getConversationHistoryAndMetrics(
+    client: OpencodeClient,
+    sessionId: string,
+  ): Promise<{ output: string; metrics: Metrics }> {
+    const metrics: Metrics = {
+      iterations: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      cost: 0,
+    };
 
-      for (const message of messages) {
-        const role = message.info?.role || "unknown";
-        const parts = message.parts || [];
+    // Collect root session + all subagent child sessions
+    const allSessionIds = await this.collectAllSessionIds(client, sessionId);
+    if (allSessionIds.length > 1) {
+      console.log(
+        `Found ${allSessionIds.length} sessions (1 root + ${allSessionIds.length - 1} subagent)`,
+      );
+    }
 
-        // Format each message with role prefix
-        const messageParts: string[] = [];
-        for (const part of parts) {
-          if (part.type === "text" && part.text) {
-            messageParts.push(part.text);
-          } else if (part.type === "tool") {
-            // Include tool use information
-            const toolUse = part as any;
-            messageParts.push(`[Tool: ${toolUse.name || "unknown"}]`);
+    const conversationParts: string[] = [];
+
+    for (const sid of allSessionIds) {
+      try {
+        const messagesResponse = await client.session.messages({
+          path: { id: sid },
+        });
+
+        if (!messagesResponse.data) {
+          console.warn(`No messages data returned for session ${sid}`);
+          continue;
+        }
+
+        const isSubagent = sid !== sessionId;
+        for (const message of messagesResponse.data) {
+          const info = message.info;
+          const role = info?.role || "unknown";
+          const parts = message.parts || [];
+
+          // Accumulate tokens and cost from each completed assistant message
+          if (info?.role === "assistant") {
+            metrics.iterations++;
+            metrics.inputTokens += (info as any).tokens?.input || 0;
+            metrics.outputTokens += (info as any).tokens?.output || 0;
+            metrics.cost += (info as any).cost || 0;
+          }
+
+          // Format each message with role prefix (tag subagent messages)
+          const messageParts: string[] = [];
+          for (const part of parts) {
+            if (part.type === "text" && part.text) {
+              messageParts.push(part.text);
+            } else if (part.type === "tool") {
+              const toolUse = part as any;
+              messageParts.push(`[Tool: ${toolUse.tool || "unknown"}]`);
+            }
+          }
+
+          if (messageParts.length > 0) {
+            const prefix = isSubagent
+              ? `[SUBAGENT:${sid.slice(0, 8)} ${role.toUpperCase()}]`
+              : `[${role.toUpperCase()}]`;
+            conversationParts.push(`${prefix}\n${messageParts.join("\n")}`);
           }
         }
-
-        if (messageParts.length > 0) {
-          conversationParts.push(
-            `[${role.toUpperCase()}]\n${messageParts.join("\n")}`,
-          );
-        }
+      } catch (error) {
+        console.warn(`Failed to retrieve messages for session ${sid}: ${error}`);
       }
-
-      return conversationParts.join("\n\n");
-    } catch (error) {
-      console.warn(`Failed to retrieve conversation history: ${error}`);
-      return "";
     }
+
+    return { output: conversationParts.join("\n\n"), metrics };
   }
 }
 

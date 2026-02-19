@@ -15,6 +15,8 @@ export interface BenchmarkResult {
   score: number;
   iterations: number;
   tokens_used: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
   duration_secs: number;
   verification_output: string | null;
   agent_output: string | null;
@@ -34,7 +36,9 @@ export function createSuccess(
   tokensUsed: number | null,
   durationSecs: number,
   agentVersion: string | null = null,
-  modelName: string | null = null
+  modelName: string | null = null,
+  inputTokens: number | null = null,
+  outputTokens: number | null = null
 ): BenchmarkResult {
   return {
     task_id: taskId,
@@ -43,6 +47,8 @@ export function createSuccess(
     score: 100,
     iterations,
     tokens_used: tokensUsed,
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
     duration_secs: durationSecs,
     verification_output: null,
     agent_output: null,
@@ -64,7 +70,9 @@ export function createFailure(
   durationSecs: number,
   error: string,
   agentVersion: string | null = null,
-  modelName: string | null = null
+  modelName: string | null = null,
+  inputTokens: number | null = null,
+  outputTokens: number | null = null
 ): BenchmarkResult {
   return {
     task_id: taskId,
@@ -73,6 +81,8 @@ export function createFailure(
     score: 0,
     iterations,
     tokens_used: tokensUsed,
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
     duration_secs: durationSecs,
     verification_output: null,
     agent_output: null,

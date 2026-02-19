@@ -18,6 +18,8 @@ export interface SummaryEntry {
   iterations: number;
   duration_secs: number;
   tokens_used: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
 }
 
 function toEntry(result: BenchmarkResult): SummaryEntry {
@@ -29,6 +31,8 @@ function toEntry(result: BenchmarkResult): SummaryEntry {
     iterations: result.iterations,
     duration_secs: parseFloat(result.duration_secs.toFixed(2)),
     tokens_used: result.tokens_used,
+    input_tokens: result.input_tokens ?? null,
+    output_tokens: result.output_tokens ?? null,
   };
 }
 

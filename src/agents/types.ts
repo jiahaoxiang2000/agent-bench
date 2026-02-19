@@ -12,6 +12,8 @@ export interface AgentResult {
   output: string;
   iterations: number;
   tokensUsed: number | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
   cost: number | null;
   durationSecs: number;
   agentVersion: string | null;

@@ -189,7 +189,9 @@ export class TaskRunner {
         agentResult.tokensUsed,
         agentResult.durationSecs,
         agentResult.agentVersion,
-        agentResult.modelName
+        agentResult.modelName,
+        agentResult.inputTokens,
+        agentResult.outputTokens
       );
     } else {
       logger.info('Running verification...');
@@ -205,7 +207,9 @@ export class TaskRunner {
             agentResult.tokensUsed,
             agentResult.durationSecs,
             agentResult.agentVersion,
-            agentResult.modelName
+            agentResult.modelName,
+            agentResult.inputTokens,
+            agentResult.outputTokens
           );
         } else {
           logger.error(`Verification failed with exit code: ${verification.exitCode}`);
@@ -217,7 +221,9 @@ export class TaskRunner {
             agentResult.durationSecs,
             'Verification tests failed',
             agentResult.agentVersion,
-            agentResult.modelName
+            agentResult.modelName,
+            agentResult.inputTokens,
+            agentResult.outputTokens
           );
         }
 
@@ -236,7 +242,9 @@ export class TaskRunner {
           agentResult.durationSecs,
           `Verification error: ${error}`,
           agentResult.agentVersion,
-          agentResult.modelName
+          agentResult.modelName,
+          agentResult.inputTokens,
+          agentResult.outputTokens
         );
       }
     }
