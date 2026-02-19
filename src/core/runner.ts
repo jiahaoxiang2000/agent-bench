@@ -38,9 +38,29 @@ export class TaskRunner {
   /**
    * Run a single task with the specified agent.
    */
-  async runTask(taskId: string, agent: Agent, skipVerify: boolean = false): Promise<BenchmarkResult> {
+  async runTask(
+    taskId: string,
+    agent: Agent,
+    skipVerify: boolean = false,
+    runId?: string
+  ): Promise<BenchmarkResult> {
     const task = await this.loader.loadById(taskId);
-    return await this.executeTask(task, agent, skipVerify);
+    return await this.executeTask(task, agent, skipVerify, runId);
+  }
+
+  /**
+   * Run a single task against multiple models in parallel.
+   */
+  async runTaskParallel(
+    taskId: string,
+    runs: Array<{ agent: Agent; runId: string }>,
+    skipVerify: boolean = false
+  ): Promise<BenchmarkResult[]> {
+    const task = await this.loader.loadById(taskId);
+
+    return await Promise.all(
+      runs.map(({ agent, runId }) => this.executeTask(task, agent, skipVerify, runId))
+    );
   }
 
   /**
@@ -131,14 +151,19 @@ export class TaskRunner {
   /**
    * Execute a single task.
    */
-  private async executeTask(task: Task, agent: Agent, skipVerify: boolean): Promise<BenchmarkResult> {
+  private async executeTask(
+    task: Task,
+    agent: Agent,
+    skipVerify: boolean,
+    runId?: string
+  ): Promise<BenchmarkResult> {
     const startTime = Date.now();
 
     // Prepare workspace
     logger.info('Preparing workspace...');
     let workspacePath: string;
     try {
-      workspacePath = await this.workspace.prepare(task);
+      workspacePath = await this.workspace.prepare(task, runId);
       logger.success(`Workspace ready: ${workspacePath}`);
     } catch (error) {
       const duration = (Date.now() - startTime) / 1000;
@@ -160,7 +185,7 @@ export class TaskRunner {
       // Determine the directory the agent should operate in.
       // When source.run_path is set the agent is scoped to that subdirectory
       // so it cannot accidentally touch files belonging to other tasks.
-      const agentPath = this.workspace.getAgentPath(task);
+      const agentPath = this.workspace.getAgentPath(task, runId);
       if (agentPath !== workspacePath) {
         logger.debug(`Agent scoped to run_path: ${agentPath}`);
       }
@@ -267,7 +292,7 @@ export class TaskRunner {
 
       // Only clean up workspace on success; preserve it on failure for debugging
       if (result.success) {
-        await this.workspace.cleanup(task);
+        await this.workspace.cleanup(task, runId);
       } else {
         logger.warn(`Task failed — workspace preserved for debugging: ${agentPath}`);
       }

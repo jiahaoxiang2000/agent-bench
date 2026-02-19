@@ -5,6 +5,14 @@
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
+function sanitizeForFilename(value: string): string {
+  return value.replace(/[^a-zA-Z0-9._-]/g, '-');
+}
+
+function formatTimestamp(isoTimestamp: string): string {
+  return new Date(isoTimestamp).toISOString().replace(/[:.]/g, '-').replace('T', '_').replace('Z', '');
+}
+
 /**
  * Benchmark result for a single task run.
  */
@@ -121,10 +129,10 @@ export async function saveResult(result: BenchmarkResult, resultsDir: string): P
   const runsDir = join(resultsDir, 'runs');
   await mkdir(runsDir, { recursive: true });
 
-  const timestamp = new Date(result.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[0] +
-                    '_' + new Date(result.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[1].split('Z')[0].substring(0, 6);
+  const timestamp = formatTimestamp(result.timestamp);
   const status = result.success ? 'pass' : 'fail';
-  const filename = `${result.task_id}_${result.agent}_${timestamp}_${status}.json`;
+  const model = sanitizeForFilename(result.model_name ?? 'unknown-model');
+  const filename = `${result.task_id}_${result.agent}_${model}_${timestamp}_${status}.json`;
   const path = join(runsDir, filename);
 
   await writeFile(path, JSON.stringify(result, null, 2), 'utf-8');
@@ -185,8 +193,7 @@ export async function saveSuiteResults(suite: SuiteResults, resultsDir: string):
   const runsDir = join(resultsDir, 'runs');
   await mkdir(runsDir, { recursive: true });
 
-  const timestamp = new Date(suite.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[0] +
-                    '_' + new Date(suite.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[1].split('Z')[0].substring(0, 6);
+  const timestamp = formatTimestamp(suite.timestamp);
   const filename = `suite_${suite.agent}_${timestamp}.json`;
   const path = join(resultsDir, filename);
   const runsPath = join(runsDir, filename);

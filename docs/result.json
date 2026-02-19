@@ -207,5 +207,49 @@
     "tokens_used": 37856,
     "input_tokens": 37437,
     "output_tokens": 419
+  },
+  {
+    "task_id": "WRITING-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "ark/kimi-k2.5",
+    "timestamp": "2026-02-19T13:43:27.438Z",
+    "iterations": 2,
+    "duration_secs": 53.69,
+    "tokens_used": 25509,
+    "input_tokens": 25009,
+    "output_tokens": 500
+  },
+  {
+    "task_id": "WRITING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "ark/kimi-k2.5",
+    "timestamp": "2026-02-19T13:44:17.773Z",
+    "iterations": 3,
+    "duration_secs": 47.79,
+    "tokens_used": 37953,
+    "input_tokens": 37280,
+    "output_tokens": 673
+  },
+  {
+    "task_id": "CODING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "ark/kimi-k2.5",
+    "timestamp": "2026-02-19T13:52:34.138Z",
+    "iterations": 4,
+    "duration_secs": 50.14,
+    "tokens_used": 53951,
+    "input_tokens": 53074,
+    "output_tokens": 877
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "minimax-cn-coding-plan/MiniMax-M2.5",
+    "timestamp": "2026-02-19T13:55:13.715Z",
+    "iterations": 8,
+    "duration_secs": 33.99,
+    "tokens_used": 1888,
+    "input_tokens": 1071,
+    "output_tokens": 817
   }
 ]

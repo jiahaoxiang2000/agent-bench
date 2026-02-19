@@ -67,39 +67,25 @@ export class OpencodeAgent implements Agent {
       `Starting OpenCode server for task ${task.id} in workspace: ${workspace}...`,
     );
 
-    // Save current directory to restore later
-    const originalCwd = process.cwd();
+    // Start embedded OpenCode server for this task
+    const { server, client } = await createOpencode({
+      port: 0, // Auto-assign port
+    });
 
     try {
-      // Change to workspace directory before starting server
-      // This ensures the OpenCode agent starts with the correct working directory
-      process.chdir(workspace);
-      console.log(`Changed working directory to: ${process.cwd()}`);
-
-      // Start embedded OpenCode server for this task
-      const { server, client } = await createOpencode({
-        port: 0, // Auto-assign port
-      });
-
-      try {
-        return await this.withTimeout(
-          this.runTask(task, client, workspace),
-          task.timeout,
-          `OpenCode execution timed out for ${task.id} after ${task.timeout} seconds`
-        );
-      } finally {
-        // Always cleanup
-        console.log(`Closing OpenCode server...`);
-        try {
-          await server.close();
-        } catch (error) {
-          console.warn("Warning: Failed to close OpenCode server:", error);
-        }
-      }
+      return await this.withTimeout(
+        this.runTask(task, client, workspace),
+        task.timeout,
+        `OpenCode execution timed out for ${task.id} after ${task.timeout} seconds`
+      );
     } finally {
-      // Restore original working directory
-      process.chdir(originalCwd);
-      console.log(`Restored working directory to: ${process.cwd()}`);
+      // Always cleanup
+      console.log(`Closing OpenCode server...`);
+      try {
+        await server.close();
+      } catch (error) {
+        console.warn("Warning: Failed to close OpenCode server:", error);
+      }
     }
   }
 

@@ -19,12 +19,31 @@ export class WorkspaceManager {
   }
 
   /**
+   * Create a filesystem-safe workspace suffix for a run identifier.
+   */
+  private sanitizeRunId(runId: string): string {
+    return runId.replace(/[^a-zA-Z0-9._-]/g, '-');
+  }
+
+  /**
+   * Resolve the workspace path for a task and optional run identifier.
+   */
+  private resolveWorkspace(task: Task, runId?: string): string {
+    if (!runId) {
+      return join(this.workspaceDir, task.id);
+    }
+
+    const suffix = this.sanitizeRunId(runId);
+    return join(this.workspaceDir, `${task.id}__${suffix}`);
+  }
+
+  /**
    * Prepare a workspace for task execution.
    * @param task The task to prepare workspace for
    * @returns The path to the prepared workspace
    */
-  async prepare(task: Task): Promise<string> {
-    const workspace = join(this.workspaceDir, task.id);
+  async prepare(task: Task, runId?: string): Promise<string> {
+    const workspace = this.resolveWorkspace(task, runId);
 
     // Clean up existing workspace if it exists
     try {
@@ -81,8 +100,8 @@ export class WorkspaceManager {
    * Clean up a workspace after task execution.
    * @param task The task whose workspace to clean up
    */
-  async cleanup(task: Task): Promise<void> {
-    const workspace = join(this.workspaceDir, task.id);
+  async cleanup(task: Task, runId?: string): Promise<void> {
+    const workspace = this.resolveWorkspace(task, runId);
     try {
       await rm(workspace, { recursive: true, force: true });
     } catch (error) {
@@ -96,8 +115,8 @@ export class WorkspaceManager {
    * @param task The task to check
    * @returns True if workspace exists
    */
-  async exists(task: Task): Promise<boolean> {
-    const workspace = join(this.workspaceDir, task.id);
+  async exists(task: Task, runId?: string): Promise<boolean> {
+    const workspace = this.resolveWorkspace(task, runId);
     try {
       await mkdir(workspace, { recursive: false });
       // If we can create it, it didn't exist
@@ -114,8 +133,8 @@ export class WorkspaceManager {
    * @param task The task
    * @returns The workspace root path
    */
-  getPath(task: Task): string {
-    return join(this.workspaceDir, task.id);
+  getPath(task: Task, runId?: string): string {
+    return this.resolveWorkspace(task, runId);
   }
 
   /**
@@ -126,7 +145,7 @@ export class WorkspaceManager {
    * @param task The task
    * @returns The path the agent should treat as its working root
    */
-  getAgentPath(task: Task): string {
-    return join(this.getPath(task), task.source.run_path);
+  getAgentPath(task: Task, runId?: string): string {
+    return join(this.getPath(task, runId), task.source.run_path);
   }
 }
