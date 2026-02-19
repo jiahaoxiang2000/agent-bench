@@ -112,9 +112,21 @@ export class WorkspaceManager {
   /**
    * Get the workspace path for a task.
    * @param task The task
-   * @returns The workspace path
+   * @returns The workspace root path
    */
   getPath(task: Task): string {
     return join(this.workspaceDir, task.id);
+  }
+
+  /**
+   * Get the agent run path for a task.
+   * The agent is scoped to the task's own subdirectory (source.run_path) so
+   * it cannot accidentally read or modify files belonging to other tasks in
+   * the same cloned repository.
+   * @param task The task
+   * @returns The path the agent should treat as its working root
+   */
+  getAgentPath(task: Task): string {
+    return join(this.getPath(task), task.source.run_path);
   }
 }

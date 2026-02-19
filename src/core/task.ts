@@ -1,8 +1,20 @@
 /**
  * Task definitions and schemas for Agent Bench.
+ *
+ * Convention: every task lives at tasks/<CATEGORY>/<NNN>/task.yaml and its
+ * verify script at tasks/<CATEGORY>/<NNN>/verify.py.  The task ID encodes
+ * both pieces of information as "<CATEGORY>-<NNN>" (e.g. "TOOLS-001"), so
+ * source repository details, run_path, and verification command are all
+ * derived automatically by the loader — they do not need to be stored in the
+ * YAML file.
  */
 
 import { z } from 'zod';
+
+/** Shared repository for all benchmark tasks. */
+export const TASKS_REPOSITORY = 'https://github.com/isomoes/agent-bench-tasks.git';
+/** Default branch used when cloning the tasks repository. */
+export const TASKS_COMMIT = 'main';
 
 /**
  * Task category classification.
@@ -17,23 +29,27 @@ export const DifficultySchema = z.enum(['easy', 'medium', 'hard']);
 export type Difficulty = z.infer<typeof DifficultySchema>;
 
 /**
- * Source repository configuration.
+ * Source repository configuration (fully derived from task ID — not stored in YAML).
  */
-export const SourceConfigSchema = z.object({
-  repository: z.string().min(1, 'Source repository cannot be empty'),
-  commit: z.string().min(1, 'Source commit cannot be empty'),
-});
-export type SourceConfig = z.infer<typeof SourceConfigSchema>;
+export interface SourceConfig {
+  /** URL of the tasks repository. */
+  repository: string;
+  /** Branch or commit to check out. */
+  commit: string;
+  /** Subdirectory inside the workspace the agent should treat as its root. */
+  run_path: string;
+}
 
 /**
  * Verification configuration.
+ * Only `timeout` needs to be stored in the YAML; `type` and `command` are derived.
  */
 export const VerificationConfigSchema = z.object({
-  type: z.string(),
-  command: z.string().min(1, 'Verification command cannot be empty'),
+  type: z.string().default('python'),
+  command: z.string().optional(),   // derived when absent
   timeout: z.number().int().positive().default(60),
 });
-export type VerificationConfig = z.infer<typeof VerificationConfigSchema>;
+export type VerificationConfig = z.infer<typeof VerificationConfigSchema> & { command: string };
 
 /**
  * Agent permissions configuration.
@@ -56,25 +72,79 @@ export const TaskMetadataSchema = z.object({
 export type TaskMetadata = z.infer<typeof TaskMetadataSchema>;
 
 /**
- * A benchmark task definition.
+ * Raw schema used to parse the YAML file.
+ * Only fields that cannot be derived from the task ID are required.
  */
-export const TaskSchema = z.object({
+export const TaskRawSchema = z.object({
   id: z.string().min(1, 'Task ID cannot be empty'),
   title: z.string().min(1, 'Task title cannot be empty'),
   category: TaskCategorySchema,
   difficulty: DifficultySchema,
-  source: SourceConfigSchema,
   prompt: z.string().min(1, 'Task prompt cannot be empty'),
-  verification: VerificationConfigSchema,
+  verification: VerificationConfigSchema.default({}),
   permissions: PermissionsConfigSchema.default({}),
   metadata: TaskMetadataSchema.optional().default({ tags: [] }),
   max_iterations: z.number().int().positive().optional(),
 });
-export type Task = z.infer<typeof TaskSchema>;
+export type TaskRaw = z.infer<typeof TaskRawSchema>;
+
+/**
+ * A fully-resolved benchmark task definition.
+ * All fields are present; derived fields are filled in by the loader.
+ */
+export interface Task extends TaskRaw {
+  source: SourceConfig;
+  verification: VerificationConfig;
+}
+
+/**
+ * Derive the run_path for a task from its ID.
+ * "TOOLS-001" → "TOOLS/001", "CODING-003" → "CODING/003"
+ * @param taskId The task ID in CATEGORY-NNN format
+ * @returns The relative path inside the cloned workspace
+ */
+export function deriveRunPath(taskId: string): string {
+  const match = taskId.match(/^([A-Z][A-Z0-9-]*)-(\d+)$/);
+  if (!match) {
+    throw new Error(`Cannot derive run_path from task ID: ${taskId}`);
+  }
+  return `${match[1]}/${match[2]}`;
+}
+
+/**
+ * Derive the verification command for a task from its ID.
+ * "TOOLS-001" → "python3 TOOLS/001/verify.py"
+ * @param taskId The task ID
+ * @returns The shell command to run the verification script
+ */
+export function deriveVerifyCommand(taskId: string): string {
+  return `python3 ${deriveRunPath(taskId)}/verify.py`;
+}
+
+/**
+ * Build a fully-resolved Task from raw YAML data.
+ * @param raw Parsed and validated raw task data
+ * @returns Fully-resolved Task with all derived fields populated
+ */
+export function resolveTask(raw: TaskRaw): Task {
+  const runPath = deriveRunPath(raw.id);
+  return {
+    ...raw,
+    source: {
+      repository: TASKS_REPOSITORY,
+      commit: TASKS_COMMIT,
+      run_path: runPath,
+    },
+    verification: {
+      ...raw.verification,
+      command: raw.verification.command ?? deriveVerifyCommand(raw.id),
+    },
+  };
+}
 
 /**
  * Validate a task configuration.
- * @throws InvalidTaskFormatError if validation fails
+ * @throws Error if required derived fields cannot be computed
  */
 export function validateTask(task: Task): void {
   if (!task.source.repository) {

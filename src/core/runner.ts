@@ -157,11 +157,19 @@ export class TaskRunner {
     }
 
     try {
+      // Determine the directory the agent should operate in.
+      // When source.run_path is set the agent is scoped to that subdirectory
+      // so it cannot accidentally touch files belonging to other tasks.
+      const agentPath = this.workspace.getAgentPath(task);
+      if (agentPath !== workspacePath) {
+        logger.debug(`Agent scoped to run_path: ${agentPath}`);
+      }
+
       // Execute agent
       logger.info('Executing agent...');
       let agentResult;
       try {
-        agentResult = await agent.execute(task, workspacePath);
+        agentResult = await agent.execute(task, agentPath);
         logger.success(`Agent execution completed: ${agentResult.iterations} iterations`);
       } catch (error) {
         const duration = (Date.now() - startTime) / 1000;

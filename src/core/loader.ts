@@ -5,7 +5,7 @@
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import yaml from 'js-yaml';
-import { Task, TaskSchema } from './task.js';
+import { Task, TaskRawSchema, resolveTask } from './task.js';
 import { TaskLoadError, TaskNotFoundError } from '../utils/errors.js';
 
 /**
@@ -61,15 +61,18 @@ export class TaskLoader {
 
   /**
    * Load a task from a YAML file.
+   * Parses only the fields stored in the YAML, then derives source repository
+   * details, run_path, and verification command from the task ID.
    */
   private async loadFromFile(filePath: string): Promise<Task> {
     try {
       const content = await readFile(filePath, 'utf-8');
       const data = yaml.load(content);
 
-      // Validate with Zod schema
-      const task = TaskSchema.parse(data);
-      return task;
+      // Parse only the fields present in the YAML
+      const raw = TaskRawSchema.parse(data);
+      // Derive source, run_path, and verification command from the task ID
+      return resolveTask(raw);
     } catch (error) {
       if ((error as any)?.code === 'ENOENT') {
         throw new TaskLoadError(`Failed to read ${filePath}: file not found`);
