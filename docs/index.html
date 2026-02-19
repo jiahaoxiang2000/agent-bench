@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agent Bench Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
       *,
       *::before,
@@ -71,6 +72,7 @@
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
+        align-items: stretch;
       }
 
       .stat-card {
@@ -93,6 +95,15 @@
         font-weight: 700;
         color: #58a6ff;
         margin-top: 0.2rem;
+      }
+
+      .stat-chart {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 0.75rem;
+        min-width: 320px;
+        flex: 1 1 460px;
       }
 
       /* Table */
@@ -345,6 +356,19 @@
         display: inline-block;
       }
 
+      .chart-wrap {
+        height: 280px;
+      }
+
+      #score-chart-empty {
+        display: none;
+        padding: 2rem 1rem;
+        text-align: center;
+        color: #8b949e;
+        border: 1px dashed #30363d;
+        border-radius: 6px;
+      }
+
       .empty {
         text-align: center;
         padding: 3rem;
@@ -367,25 +391,11 @@
     </header>
 
     <div class="stats">
-      <div class="stat-card">
-        <div class="label">Total Runs</div>
-        <div class="value" id="stat-total">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Tasks</div>
-        <div class="value" id="stat-tasks">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Models</div>
-        <div class="value" id="stat-models">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Avg Duration</div>
-        <div class="value" id="stat-duration">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Avg Score</div>
-        <div class="value" id="stat-score">—</div>
+      <div class="stat-chart">
+        <div class="chart-wrap">
+          <canvas id="score-chart" aria-label="Task score line chart" role="img"></canvas>
+          <div id="score-chart-empty">No chart data for the current filters.</div>
+        </div>
       </div>
     </div>
 
@@ -494,6 +504,7 @@
       let allData = [];
       let sortCol = "timestamp";
       let sortAsc = false;
+      let scoreChart = null;
 
       async function load() {
         try {
@@ -578,31 +589,119 @@
         return d.toISOString().replace("T", " ").substring(0, 19) + " UTC";
       }
 
+      function pickLatestPerTaskModel(data) {
+        const map = new Map();
+        for (const row of data) {
+          const key = `${row.task_id}:::${row.model_name}`;
+          const prev = map.get(key);
+          if (!prev || new Date(row.timestamp) > new Date(prev.timestamp)) {
+            map.set(key, row);
+          }
+        }
+        return [...map.values()];
+      }
+
+      function modelColor(idx, total) {
+        const hue = Math.round((idx * 360) / Math.max(total, 1));
+        return `hsl(${hue} 80% 62%)`;
+      }
+
+      function renderScoreChart(data) {
+        const canvas = document.getElementById("score-chart");
+        const empty = document.getElementById("score-chart-empty");
+
+        if (typeof Chart === "undefined") {
+          canvas.style.display = "none";
+          empty.style.display = "block";
+          empty.textContent = "Chart.js failed to load, so the chart is unavailable.";
+          return;
+        }
+
+        const latestRows = pickLatestPerTaskModel(data);
+        const tasks = [...new Set(latestRows.map((d) => d.task_id))].sort((a, b) =>
+          a.localeCompare(b, undefined, { numeric: true }),
+        );
+        const models = [...new Set(latestRows.map((d) => d.model_name))].sort();
+
+        if (!tasks.length || !models.length) {
+          canvas.style.display = "none";
+          empty.style.display = "block";
+          empty.textContent = "No chart data for the current filters.";
+          if (scoreChart) {
+            scoreChart.destroy();
+            scoreChart = null;
+          }
+          return;
+        }
+
+        const points = new Map(
+          latestRows.map((d) => [`${d.task_id}:::${d.model_name}`, calcScore(d)]),
+        );
+
+        const datasets = models.map((model, idx) => {
+          const color = modelColor(idx, models.length);
+          return {
+            label: model,
+            data: tasks.map((taskId) => {
+              const key = `${taskId}:::${model}`;
+              return points.has(key) ? points.get(key) : null;
+            }),
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: 2,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            spanGaps: true,
+            tension: 0.2,
+          };
+        });
+
+        canvas.style.display = "block";
+        empty.style.display = "none";
+
+        if (scoreChart) scoreChart.destroy();
+        scoreChart = new Chart(canvas, {
+          type: "line",
+          data: {
+            labels: tasks,
+            datasets,
+          },
+          options: {
+            maintainAspectRatio: false,
+            interaction: {
+              mode: "nearest",
+              intersect: false,
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#c9d1d9",
+                  boxWidth: 12,
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: { color: "#8b949e", maxRotation: 35, minRotation: 0 },
+                grid: { color: "#21262d" },
+                title: { display: true, text: "Tasks", color: "#8b949e" },
+              },
+              y: {
+                min: 0,
+                max: 100,
+                ticks: { color: "#8b949e" },
+                grid: { color: "#21262d" },
+                title: { display: true, text: "Score", color: "#8b949e" },
+              },
+            },
+          },
+        });
+      }
+
       function render() {
         const data = sorted(filtered());
 
-        // Stats
-        const tasks = new Set(data.map((d) => d.task_id)).size;
-        const models = new Set(data.map((d) => d.model_name)).size;
-        const avgDur = data.length
-          ? (
-              data.reduce((s, d) => s + d.duration_secs, 0) / data.length
-            ).toFixed(1)
-          : "—";
-
-        document.getElementById("stat-total").textContent = data.length;
-        document.getElementById("stat-tasks").textContent = tasks;
-        document.getElementById("stat-models").textContent = models;
-        document.getElementById("stat-duration").textContent = data.length
-          ? avgDur + "s"
-          : "—";
-
-        const avgScore = data.length
-          ? (data.reduce((s, d) => s + calcScore(d), 0) / data.length).toFixed(1)
-          : "—";
-        document.getElementById("stat-score").textContent = data.length
-          ? avgScore
-          : "—";
+        renderScoreChart(data);
 
         // Table
         const tbody = document.getElementById("tbody");
