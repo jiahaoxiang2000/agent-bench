@@ -391,10 +391,13 @@
 
     <div class="controls">
       <label
-        >Task
-        <select id="filter-task">
-          <option value="">All</option>
-        </select>
+        >Task Name
+        <input
+          id="filter-task-name"
+          type="text"
+          placeholder="filter task..."
+          style="width: 180px"
+        />
       </label>
       <label
         >Model
@@ -507,26 +510,25 @@
       }
 
       function populateFilters() {
-        const tasks = [...new Set(allData.map((d) => d.task_id))].sort();
-        const taskSel = document.getElementById("filter-task");
-        tasks.forEach((t) =>
-          taskSel.insertAdjacentHTML("beforeend", `<option>${t}</option>`),
-        );
-        taskSel.addEventListener("change", render);
+        document
+          .getElementById("filter-task-name")
+          .addEventListener("input", render);
         document
           .getElementById("filter-model")
           .addEventListener("input", render);
       }
 
       function filtered() {
-        const task = document.getElementById("filter-task").value;
+        const taskName = document
+          .getElementById("filter-task-name")
+          .value.toLowerCase();
         const model = document
           .getElementById("filter-model")
           .value.toLowerCase();
 
         return allData.filter(
           (d) =>
-            (!task || d.task_id === task) &&
+            (!taskName || d.task_id.toLowerCase().includes(taskName)) &&
             (!model || d.model_name.toLowerCase().includes(model)),
         );
       }
