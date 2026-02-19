@@ -185,5 +185,27 @@
     "tokens_used": 12194,
     "input_tokens": 11648,
     "output_tokens": 546
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "ark/kimi-k2.5",
+    "timestamp": "2026-02-19T13:27:51.736Z",
+    "iterations": 5,
+    "duration_secs": 29.45,
+    "tokens_used": 62711,
+    "input_tokens": 62282,
+    "output_tokens": 429
+  },
+  {
+    "task_id": "TOOLS-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "ark/kimi-k2.5",
+    "timestamp": "2026-02-19T13:35:55.873Z",
+    "iterations": 3,
+    "duration_secs": 72.61,
+    "tokens_used": 37856,
+    "input_tokens": 37437,
+    "output_tokens": 419
   }
 ]

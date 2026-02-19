@@ -82,7 +82,11 @@ export class OpencodeAgent implements Agent {
       });
 
       try {
-        return await this.runTask(task, client, workspace);
+        return await this.withTimeout(
+          this.runTask(task, client, workspace),
+          task.timeout,
+          `OpenCode execution timed out for ${task.id} after ${task.timeout} seconds`
+        );
       } finally {
         // Always cleanup
         console.log(`Closing OpenCode server...`);
@@ -180,6 +184,32 @@ export class OpencodeAgent implements Agent {
       };
     } catch (error) {
       throw new AgentError(`OpenCode execution failed: ${error}`);
+    }
+  }
+
+  /**
+   * Enforce a timeout around an async operation.
+   */
+  private async withTimeout<T>(
+    operation: Promise<T>,
+    timeoutSecs: number,
+    timeoutMessage: string,
+  ): Promise<T> {
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      return await Promise.race([
+        operation,
+        new Promise<never>((_, reject) => {
+          timeoutHandle = setTimeout(() => {
+            reject(new AgentError(timeoutMessage));
+          }, timeoutSecs * 1000);
+        }),
+      ]);
+    } finally {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
     }
   }
 

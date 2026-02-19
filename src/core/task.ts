@@ -85,6 +85,7 @@ export const TaskRawSchema = z.object({
   permissions: PermissionsConfigSchema.default({}),
   metadata: TaskMetadataSchema.optional().default({ tags: [] }),
   max_iterations: z.number().int().positive().optional(),
+  timeout: z.number().int().positive().default(180),
 });
 export type TaskRaw = z.infer<typeof TaskRawSchema>;
 
