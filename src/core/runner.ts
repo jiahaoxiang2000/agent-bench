@@ -156,107 +156,111 @@ export class TaskRunner {
       return result;
     }
 
-    // Execute agent
-    logger.info('Executing agent...');
-    let agentResult;
     try {
-      agentResult = await agent.execute(task, workspacePath);
-      logger.success(`Agent execution completed: ${agentResult.iterations} iterations`);
-    } catch (error) {
-      const duration = (Date.now() - startTime) / 1000;
-      const result = createFailure(
-        task.id,
-        agent.name(),
-        0,
-        null,
-        duration,
-        `Agent execution failed: ${error}`,
-        null,
-        null
-      );
-      await saveResult(result, this.config.resultsDir);
-      return result;
-    }
-
-    // Run verification (unless skipped)
-    let result: BenchmarkResult;
-    if (skipVerify) {
-      logger.warn('Skipping verification');
-      result = createSuccess(
-        task.id,
-        agent.name(),
-        agentResult.iterations,
-        agentResult.tokensUsed,
-        agentResult.durationSecs,
-        agentResult.agentVersion,
-        agentResult.modelName,
-        agentResult.inputTokens,
-        agentResult.outputTokens
-      );
-    } else {
-      logger.info('Running verification...');
+      // Execute agent
+      logger.info('Executing agent...');
+      let agentResult;
       try {
-        const verification = await Verifier.verify(task, workspacePath);
+        agentResult = await agent.execute(task, workspacePath);
+        logger.success(`Agent execution completed: ${agentResult.iterations} iterations`);
+      } catch (error) {
+        const duration = (Date.now() - startTime) / 1000;
+        const result = createFailure(
+          task.id,
+          agent.name(),
+          0,
+          null,
+          duration,
+          `Agent execution failed: ${error}`,
+          null,
+          null
+        );
+        await saveResult(result, this.config.resultsDir);
+        return result;
+      }
 
-        if (verification.passed) {
-          logger.success('Verification passed');
-          result = createSuccess(
-            task.id,
-            agent.name(),
-            agentResult.iterations,
-            agentResult.tokensUsed,
-            agentResult.durationSecs,
-            agentResult.agentVersion,
-            agentResult.modelName,
-            agentResult.inputTokens,
-            agentResult.outputTokens
+      // Run verification (unless skipped)
+      let result: BenchmarkResult;
+      if (skipVerify) {
+        logger.warn('Skipping verification');
+        result = createSuccess(
+          task.id,
+          agent.name(),
+          agentResult.iterations,
+          agentResult.tokensUsed,
+          agentResult.durationSecs,
+          agentResult.agentVersion,
+          agentResult.modelName,
+          agentResult.inputTokens,
+          agentResult.outputTokens
+        );
+      } else {
+        logger.info('Running verification...');
+        try {
+          const verification = await Verifier.verify(task, workspacePath);
+
+          if (verification.passed) {
+            logger.success('Verification passed');
+            result = createSuccess(
+              task.id,
+              agent.name(),
+              agentResult.iterations,
+              agentResult.tokensUsed,
+              agentResult.durationSecs,
+              agentResult.agentVersion,
+              agentResult.modelName,
+              agentResult.inputTokens,
+              agentResult.outputTokens
+            );
+          } else {
+            logger.error(`Verification failed with exit code: ${verification.exitCode}`);
+            result = createFailure(
+              task.id,
+              agent.name(),
+              agentResult.iterations,
+              agentResult.tokensUsed,
+              agentResult.durationSecs,
+              'Verification tests failed',
+              agentResult.agentVersion,
+              agentResult.modelName,
+              agentResult.inputTokens,
+              agentResult.outputTokens
+            );
+          }
+
+          // Add verification output
+          result = withVerificationOutput(
+            result,
+            `Exit code: ${verification.exitCode}\n\nSTDOUT:\n${verification.stdout}\n\nSTDERR:\n${verification.stderr}`
           );
-        } else {
-          logger.error(`Verification failed with exit code: ${verification.exitCode}`);
+        } catch (error) {
+          logger.error(`Verification error: ${error}`);
           result = createFailure(
             task.id,
             agent.name(),
             agentResult.iterations,
             agentResult.tokensUsed,
             agentResult.durationSecs,
-            'Verification tests failed',
+            `Verification error: ${error}`,
             agentResult.agentVersion,
             agentResult.modelName,
             agentResult.inputTokens,
             agentResult.outputTokens
           );
         }
-
-        // Add verification output
-        result = withVerificationOutput(
-          result,
-          `Exit code: ${verification.exitCode}\n\nSTDOUT:\n${verification.stdout}\n\nSTDERR:\n${verification.stderr}`
-        );
-      } catch (error) {
-        logger.error(`Verification error: ${error}`);
-        result = createFailure(
-          task.id,
-          agent.name(),
-          agentResult.iterations,
-          agentResult.tokensUsed,
-          agentResult.durationSecs,
-          `Verification error: ${error}`,
-          agentResult.agentVersion,
-          agentResult.modelName,
-          agentResult.inputTokens,
-          agentResult.outputTokens
-        );
       }
+
+      // Add agent output
+      result = withAgentOutput(result, agentResult.output);
+
+      // Save result
+      const resultPath = await saveResult(result, this.config.resultsDir);
+      logger.debug(`Result saved to: ${resultPath}`);
+
+      return result;
+    } finally {
+      await this.workspace.cleanup(task);
     }
-
-    // Add agent output
-    result = withAgentOutput(result, agentResult.output);
-
-    // Save result
-    const resultPath = await saveResult(result, this.config.resultsDir);
-    logger.debug(`Result saved to: ${resultPath}`);
-
-    return result;
   }
 
   /**
