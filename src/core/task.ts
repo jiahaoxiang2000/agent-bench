@@ -4,9 +4,9 @@
  * Convention: every task lives at tasks/<CATEGORY>/<NNN>/task.yaml and its
  * verify script at tasks/<CATEGORY>/<NNN>/verify.py.  The task ID encodes
  * both pieces of information as "<CATEGORY>-<NNN>" (e.g. "TOOLS-001"), so
- * source repository details, run_path, and verification command are all
- * derived automatically by the loader — they do not need to be stored in the
- * YAML file.
+ * source repository details, run_path, and verification command are derived
+ * automatically by default. Task YAML may still override these values when
+ * needed (for example, custom run_path layouts).
  */
 
 import { z } from 'zod';
@@ -29,7 +29,7 @@ export const DifficultySchema = z.enum(['easy', 'medium', 'hard']);
 export type Difficulty = z.infer<typeof DifficultySchema>;
 
 /**
- * Source repository configuration (fully derived from task ID — not stored in YAML).
+ * Source repository configuration for a resolved task.
  */
 export interface SourceConfig {
   /** URL of the tasks repository. */
@@ -39,6 +39,16 @@ export interface SourceConfig {
   /** Subdirectory inside the workspace the agent should treat as its root. */
   run_path: string;
 }
+
+/**
+ * Optional source overrides accepted from YAML.
+ * Any missing value is derived from defaults and task ID.
+ */
+const SourceConfigOverrideSchema = z.object({
+  repository: z.string().min(1).optional(),
+  commit: z.string().min(1).optional(),
+  run_path: z.string().min(1).optional(),
+});
 
 /**
  * Verification configuration.
@@ -73,7 +83,7 @@ export type TaskMetadata = z.infer<typeof TaskMetadataSchema>;
 
 /**
  * Raw schema used to parse the YAML file.
- * Only fields that cannot be derived from the task ID are required.
+ * Required fields plus optional override fields from YAML.
  */
 export const TaskRawSchema = z.object({
   id: z.string().min(1, 'Task ID cannot be empty'),
@@ -81,6 +91,7 @@ export const TaskRawSchema = z.object({
   category: TaskCategorySchema,
   difficulty: DifficultySchema,
   prompt: z.string().min(1, 'Task prompt cannot be empty'),
+  source: SourceConfigOverrideSchema.optional().default({}),
   verification: VerificationConfigSchema.default({}),
   permissions: PermissionsConfigSchema.default({}),
   metadata: TaskMetadataSchema.optional().default({ tags: [] }),
@@ -129,12 +140,12 @@ export function deriveVerifyCommand(_taskId: string): string {
  * @returns Fully-resolved Task with all derived fields populated
  */
 export function resolveTask(raw: TaskRaw): Task {
-  const runPath = deriveRunPath(raw.id);
+  const runPath = raw.source.run_path ?? deriveRunPath(raw.id);
   return {
     ...raw,
     source: {
-      repository: TASKS_REPOSITORY,
-      commit: TASKS_COMMIT,
+      repository: raw.source.repository ?? TASKS_REPOSITORY,
+      commit: raw.source.commit ?? TASKS_COMMIT,
       run_path: runPath,
     },
     verification: {

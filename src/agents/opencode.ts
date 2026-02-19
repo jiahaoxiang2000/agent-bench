@@ -117,14 +117,14 @@ export class OpencodeAgent implements Agent {
     // Build agent configuration based on task permissions
     const agentType = this.selectAgentType(task);
 
-    // Start event stream subscription to detect session completion
-    const eventPromise = this.waitForSessionIdle(client);
-
     try {
       // Send task prompt
       console.log(`Sending prompt to OpenCode...`);
       await client.session.prompt({
         path: { id: sessionId },
+        query: {
+          directory: workspace,
+        },
         body: {
           parts: [
             {
@@ -139,15 +139,12 @@ export class OpencodeAgent implements Agent {
         },
       });
 
-      // Wait for session to complete (event stream will resolve)
-      await eventPromise;
-
       const durationSecs = (Date.now() - startTime) / 1000;
 
       // Get full conversation history and compute metrics from completed messages
       console.log(`Retrieving full conversation history...`);
       const { output: conversationOutput, metrics } =
-        await this.getConversationHistoryAndMetrics(client, sessionId);
+        await this.getConversationHistoryAndMetrics(client, sessionId, workspace);
 
       console.log(
         `Task completed: ${metrics.iterations} iterations, ${metrics.inputTokens + metrics.outputTokens} tokens`,
@@ -211,52 +208,24 @@ export class OpencodeAgent implements Agent {
   }
 
   /**
-   * Subscribe to event stream and wait for session.idle (task complete).
-   */
-  private async waitForSessionIdle(client: OpencodeClient): Promise<void> {
-    console.log(`Subscribing to event stream...`);
-
-    try {
-      const eventStream = await client.event.subscribe({});
-
-      for await (const event of eventStream.stream) {
-        switch (event.type) {
-          case "session.idle":
-            console.log(`Session idle - task completed`);
-            return;
-
-          case "session.error":
-            const errorMsg =
-              (event.properties as any)?.message || "Unknown error";
-            throw new AgentError(`Session error: ${errorMsg}`);
-
-          default:
-            break;
-        }
-      }
-    } catch (error) {
-      if (error instanceof AgentError) {
-        throw error;
-      }
-      console.log(`Event stream ended`);
-    }
-  }
-
-  /**
    * Recursively collect all session IDs in the tree rooted at sessionId
    * (the root session plus all subagent child sessions).
    */
   private async collectAllSessionIds(
     client: OpencodeClient,
     sessionId: string,
+    workspace: string,
   ): Promise<string[]> {
     const ids: string[] = [sessionId];
     try {
       const childrenResponse = await client.session.children({
         path: { id: sessionId },
+        query: {
+          directory: workspace,
+        },
       });
       for (const child of childrenResponse.data ?? []) {
-        const childIds = await this.collectAllSessionIds(client, child.id);
+        const childIds = await this.collectAllSessionIds(client, child.id, workspace);
         ids.push(...childIds);
       }
     } catch (error) {
@@ -276,6 +245,7 @@ export class OpencodeAgent implements Agent {
   private async getConversationHistoryAndMetrics(
     client: OpencodeClient,
     sessionId: string,
+    workspace: string,
   ): Promise<{ output: string; metrics: Metrics }> {
     const metrics: Metrics = {
       iterations: 0,
@@ -285,7 +255,7 @@ export class OpencodeAgent implements Agent {
     };
 
     // Collect root session + all subagent child sessions
-    const allSessionIds = await this.collectAllSessionIds(client, sessionId);
+    const allSessionIds = await this.collectAllSessionIds(client, sessionId, workspace);
     if (allSessionIds.length > 1) {
       console.log(
         `Found ${allSessionIds.length} sessions (1 root + ${allSessionIds.length - 1} subagent)`,
@@ -298,6 +268,9 @@ export class OpencodeAgent implements Agent {
       try {
         const messagesResponse = await client.session.messages({
           path: { id: sid },
+          query: {
+            directory: workspace,
+          },
         });
 
         if (!messagesResponse.data) {
