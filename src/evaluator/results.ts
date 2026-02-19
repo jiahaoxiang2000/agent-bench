@@ -182,13 +182,18 @@ export function createSuiteResults(agent: string, results: BenchmarkResult[]): S
  */
 export async function saveSuiteResults(suite: SuiteResults, resultsDir: string): Promise<string> {
   await mkdir(resultsDir, { recursive: true });
+  const runsDir = join(resultsDir, 'runs');
+  await mkdir(runsDir, { recursive: true });
 
   const timestamp = new Date(suite.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[0] +
                     '_' + new Date(suite.timestamp).toISOString().replace(/[:.]/g, '-').split('T')[1].split('Z')[0].substring(0, 6);
   const filename = `suite_${suite.agent}_${timestamp}.json`;
   const path = join(resultsDir, filename);
+  const runsPath = join(runsDir, filename);
+  const payload = JSON.stringify(suite, null, 2);
 
-  await writeFile(path, JSON.stringify(suite, null, 2), 'utf-8');
+  await writeFile(path, payload, 'utf-8');
+  await writeFile(runsPath, payload, 'utf-8');
 
   return path;
 }

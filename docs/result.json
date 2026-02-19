@@ -1,76 +1,189 @@
 [
   {
-    "task_id": "TOOLS-001",
-    "agent_version": "@opencode-ai/sdk@1.0.169",
-    "model_name": "zhipuai-coding-plan/glm-4.6",
-    "timestamp": "2025-12-20T14:18:15.287Z",
-    "iterations": 6,
-    "duration_secs": 33.97,
-    "tokens_used": 26347
-  },
-  {
-    "task_id": "TOOLS-001",
-    "agent_version": "@opencode-ai/sdk@1.0.169",
-    "model_name": "mimo/mimo-v2-flash",
-    "timestamp": "2025-12-20T14:22:06.729Z",
-    "iterations": 5,
-    "duration_secs": 18.45,
-    "tokens_used": 57795
-  },
-  {
-    "task_id": "TOOLS-001",
-    "agent_version": "@opencode-ai/sdk@1.0.169",
-    "model_name": "deepseek/deepseek-chat",
-    "timestamp": "2025-12-20T14:26:33.482Z",
-    "iterations": 7,
-    "duration_secs": 30.65,
-    "tokens_used": 22021
-  },
-  {
-    "task_id": "TOOLS-001",
-    "agent_version": "@opencode-ai/sdk@1.0.169",
-    "model_name": "alibaba-cn/qwen3-coder-plus",
-    "timestamp": "2025-12-20T14:28:30.610Z",
-    "iterations": 6,
-    "duration_secs": 15.6,
-    "tokens_used": 24832
-  },
-  {
-    "task_id": "TOOLS-001",
-    "agent_version": "@opencode-ai/sdk@1.0.169",
-    "model_name": "moonshotai-cn/kimi-k2-thinking-turbo",
-    "timestamp": "2025-12-20T14:30:05.821Z",
+    "task_id": "TOOLS-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-19T12:40:45.778Z",
     "iterations": 4,
-    "duration_secs": 18.11,
-    "tokens_used": 42702
+    "duration_secs": 16.88,
+    "tokens_used": 348,
+    "input_tokens": 5,
+    "output_tokens": 343
   },
   {
-    "task_id": "TOOLS-001",
-    "agent_version": "@opencode-ai/sdk@1.0.169",
-    "model_name": "anthropic/claude-sonnet-4-5",
-    "timestamp": "2025-12-20T14:34:10.901Z",
-    "iterations": 5,
-    "duration_secs": 29.07,
-    "tokens_used": 683
+    "task_id": "TOOLS-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-19T12:50:49.877Z",
+    "iterations": 6,
+    "duration_secs": 33.06,
+    "tokens_used": 907,
+    "input_tokens": 7,
+    "output_tokens": 900
   },
   {
     "task_id": "TOOLS-001",
     "agent_version": "@opencode-ai/sdk@1.2.6",
     "model_name": "anthropic/claude-sonnet-4-6",
-    "timestamp": "2026-02-18T13:42:35.015Z",
+    "timestamp": "2026-02-19T12:51:57.897Z",
     "iterations": 4,
-    "duration_secs": 14.07,
-    "tokens_used": 348
+    "duration_secs": 17.23,
+    "tokens_used": 551,
+    "input_tokens": 5,
+    "output_tokens": 546
+  },
+  {
+    "task_id": "WRITING-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-19T12:53:48.342Z",
+    "iterations": 3,
+    "duration_secs": 18.49,
+    "tokens_used": 461,
+    "input_tokens": 4,
+    "output_tokens": 457
+  },
+  {
+    "task_id": "WRITING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-19T12:54:06.774Z",
+    "iterations": 3,
+    "duration_secs": 15.08,
+    "tokens_used": 284,
+    "input_tokens": 4,
+    "output_tokens": 280
+  },
+  {
+    "task_id": "WRITING-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-19T12:59:46.031Z",
+    "iterations": 8,
+    "duration_secs": 35.04,
+    "tokens_used": 1238,
+    "input_tokens": 9,
+    "output_tokens": 1229
+  },
+  {
+    "task_id": "CODING-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-19T13:02:25.867Z",
+    "iterations": 6,
+    "duration_secs": 28.34,
+    "tokens_used": 866,
+    "input_tokens": 7,
+    "output_tokens": 859
+  },
+  {
+    "task_id": "CODING-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-19T13:02:51.153Z",
+    "iterations": 4,
+    "duration_secs": 21.39,
+    "tokens_used": 700,
+    "input_tokens": 5,
+    "output_tokens": 695
+  },
+  {
+    "task_id": "CODING-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:05:31.966Z",
+    "iterations": 5,
+    "duration_secs": 23.52,
+    "tokens_used": 13517,
+    "input_tokens": 12806,
+    "output_tokens": 711
+  },
+  {
+    "task_id": "CODING-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:06:02.078Z",
+    "iterations": 4,
+    "duration_secs": 27.51,
+    "tokens_used": 23832,
+    "input_tokens": 22921,
+    "output_tokens": 911
+  },
+  {
+    "task_id": "CODING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:06:19.451Z",
+    "iterations": 3,
+    "duration_secs": 14.71,
+    "tokens_used": 23153,
+    "input_tokens": 22848,
+    "output_tokens": 305
+  },
+  {
+    "task_id": "WRITING-001",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:07:50.789Z",
+    "iterations": 8,
+    "duration_secs": 35.3,
+    "tokens_used": 14386,
+    "input_tokens": 13434,
+    "output_tokens": 952
+  },
+  {
+    "task_id": "WRITING-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:08:32.664Z",
+    "iterations": 6,
+    "duration_secs": 38.3,
+    "tokens_used": 14039,
+    "input_tokens": 12415,
+    "output_tokens": 1624
+  },
+  {
+    "task_id": "WRITING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:08:57.751Z",
+    "iterations": 5,
+    "duration_secs": 22.59,
+    "tokens_used": 12348,
+    "input_tokens": 11636,
+    "output_tokens": 712
   },
   {
     "task_id": "TOOLS-001",
     "agent_version": "@opencode-ai/sdk@1.2.6",
-    "model_name": "anthropic/claude-sonnet-4-6",
-    "timestamp": "2026-02-19T12:12:55.523Z",
-    "iterations": 14,
-    "duration_secs": 70.28,
-    "tokens_used": 2798,
-    "input_tokens": 15,
-    "output_tokens": 2783
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:10:21.322Z",
+    "iterations": 4,
+    "duration_secs": 25,
+    "tokens_used": 23475,
+    "input_tokens": 22613,
+    "output_tokens": 862
+  },
+  {
+    "task_id": "TOOLS-003",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:11:05.105Z",
+    "iterations": 9,
+    "duration_secs": 40.84,
+    "tokens_used": 25552,
+    "input_tokens": 24140,
+    "output_tokens": 1412
+  },
+  {
+    "task_id": "TOOLS-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "openai/gpt-5.3-codex",
+    "timestamp": "2026-02-19T13:11:32.584Z",
+    "iterations": 5,
+    "duration_secs": 24.78,
+    "tokens_used": 12194,
+    "input_tokens": 11648,
+    "output_tokens": 546
   }
 ]
