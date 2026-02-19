@@ -182,6 +182,169 @@
         color: #7ee787;
       }
 
+      td.score {
+        font-weight: 700;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .score-bar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .score-bar .bar {
+        display: inline-block;
+        height: 6px;
+        border-radius: 3px;
+        min-width: 2px;
+      }
+
+      .score-high {
+        color: #3fb950;
+      }
+      .score-high .bar {
+        background: #3fb950;
+      }
+
+      .score-mid {
+        color: #d29922;
+      }
+      .score-mid .bar {
+        background: #d29922;
+      }
+
+      .score-low {
+        color: #f85149;
+      }
+      .score-low .bar {
+        background: #f85149;
+      }
+
+      /* Scoring model panel */
+      .score-model {
+        max-width: 1100px;
+        margin: 0 auto 1.5rem;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+      }
+
+      .score-model summary {
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #f0f6fc;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .score-model summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .score-model summary::before {
+        content: "▶";
+        font-size: 0.7rem;
+        color: #58a6ff;
+        transition: transform 0.15s;
+      }
+
+      .score-model[open] summary::before {
+        transform: rotate(90deg);
+      }
+
+      .score-model .formula-wrap {
+        margin-top: 1rem;
+      }
+
+      .score-model .formula {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.85rem;
+        color: #e6edf3;
+        line-height: 1.8;
+        overflow-x: auto;
+      }
+
+      .score-model .formula .keyword {
+        color: #ff7b72;
+        font-weight: 600;
+      }
+
+      .score-model .formula .num {
+        color: #79c0ff;
+      }
+
+      .score-model .formula .comment {
+        color: #8b949e;
+        font-style: italic;
+      }
+
+      .score-model .penalty-table {
+        margin-top: 0.75rem;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+
+      .score-model .penalty-table th {
+        text-align: left;
+        padding: 0.5rem 0.75rem;
+        color: #8b949e;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #30363d;
+        cursor: default;
+      }
+
+      .score-model .penalty-table td {
+        padding: 0.45rem 0.75rem;
+        color: #c9d1d9;
+        border-bottom: 1px solid #21262d;
+        white-space: normal;
+      }
+
+      .score-model .penalty-table td:first-child {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        color: #d2a8ff;
+        font-size: 0.82rem;
+      }
+
+      .score-model .penalty-table td:nth-child(2) {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        color: #79c0ff;
+      }
+
+      .score-model .color-legend {
+        margin-top: 0.75rem;
+        display: flex;
+        gap: 1.25rem;
+        font-size: 0.8rem;
+      }
+
+      .score-model .color-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .score-model .color-legend .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
       .empty {
         text-align: center;
         padding: 3rem;
@@ -220,6 +383,10 @@
         <div class="label">Avg Duration</div>
         <div class="value" id="stat-duration">—</div>
       </div>
+      <div class="stat-card">
+        <div class="label">Avg Score</div>
+        <div class="value" id="stat-score">—</div>
+      </div>
     </div>
 
     <div class="controls">
@@ -240,6 +407,52 @@
       </label>
     </div>
 
+    <details class="score-model">
+      <summary>Scoring Model</summary>
+      <div class="formula-wrap">
+        <div class="formula">
+          <span class="keyword">Score</span> = <span class="keyword">clamp</span>(<span class="num">0</span>, <span class="num">100</span> − iteration_penalty − duration_penalty − token_penalty, <span class="num">100</span>)<br><br>
+          <span class="comment">// Penalty weights</span><br>
+          iteration_penalty = iterations × <span class="num">5</span><br>
+          duration_penalty &nbsp;= duration_secs × <span class="num">0.5</span><br>
+          token_penalty &nbsp;&nbsp;&nbsp;&nbsp;= tokens_used × <span class="num">0.0001</span>
+        </div>
+
+        <table class="penalty-table">
+          <thead>
+            <tr>
+              <th>Factor</th>
+              <th>Weight</th>
+              <th>Rationale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>iterations</td>
+              <td>-5 / iter</td>
+              <td>Fewer iterations means the model solved the task more directly</td>
+            </tr>
+            <tr>
+              <td>duration_secs</td>
+              <td>-0.5 / sec</td>
+              <td>Faster completion indicates better efficiency</td>
+            </tr>
+            <tr>
+              <td>tokens_used</td>
+              <td>-0.0001 / tok</td>
+              <td>Lower token usage reflects more concise reasoning</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="color-legend">
+          <span><span class="dot" style="background:#3fb950"></span> High (≥ 70)</span>
+          <span><span class="dot" style="background:#d29922"></span> Mid (≥ 40)</span>
+          <span><span class="dot" style="background:#f85149"></span> Low (&lt; 40)</span>
+        </div>
+      </div>
+    </details>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -247,9 +460,6 @@
             <th data-col="task_id">Task <span class="sort-icon">↕</span></th>
             <th data-col="model_name">
               Model <span class="sort-icon">↕</span>
-            </th>
-            <th data-col="agent_version">
-              Version <span class="sort-icon">↕</span>
             </th>
             <th data-col="iterations" class="num">
               Iterations <span class="sort-icon">↕</span>
@@ -259,6 +469,12 @@
             </th>
             <th data-col="tokens_used" class="num">
               Tokens <span class="sort-icon">↕</span>
+            </th>
+            <th data-col="score" class="num">
+              Score <span class="sort-icon">↕</span>
+            </th>
+            <th data-col="agent_version">
+              Version <span class="sort-icon">↕</span>
             </th>
             <th data-col="timestamp">
               Timestamp <span class="sort-icon">↕</span>
@@ -283,7 +499,7 @@
           allData = await res.json();
         } catch (e) {
           document.getElementById("tbody").innerHTML =
-            `<tr><td colspan="7" class="empty">Could not load result.json: ${e.message}</td></tr>`;
+            `<tr><td colspan="8" class="empty">Could not load result.json: ${e.message}</td></tr>`;
           return;
         }
         populateFilters();
@@ -317,8 +533,8 @@
 
       function sorted(data) {
         return [...data].sort((a, b) => {
-          let va = a[sortCol],
-            vb = b[sortCol];
+          let va = sortCol === "score" ? calcScore(a) : a[sortCol],
+            vb = sortCol === "score" ? calcScore(b) : b[sortCol];
           if (va == null) va = "";
           if (vb == null) vb = "";
           if (typeof va === "number") return sortAsc ? va - vb : vb - va;
@@ -326,6 +542,33 @@
             ? String(va).localeCompare(String(vb))
             : String(vb).localeCompare(String(va));
         });
+      }
+
+      /**
+       * Penalty-based score: starts at 100, deducts for iterations, duration, tokens.
+       *   - iterations:  5 pts each
+       *   - duration:    0.5 pts per second
+       *   - tokens:      0.0001 pts per token
+       * Clamped to [0, 100].
+       */
+      function calcScore(d) {
+        const iterPenalty = (d.iterations ?? 0) * 5;
+        const durPenalty = (d.duration_secs ?? 0) * 0.5;
+        const tokPenalty = (d.tokens_used ?? 0) * 0.0001;
+        return Math.max(0, Math.min(100, 100 - iterPenalty - durPenalty - tokPenalty));
+      }
+
+      function scoreClass(score) {
+        if (score >= 70) return "score-high";
+        if (score >= 40) return "score-mid";
+        return "score-low";
+      }
+
+      function scoreCell(d) {
+        const score = calcScore(d);
+        const cls = scoreClass(score);
+        const barW = Math.max(2, Math.round(score * 0.6));
+        return `<td class="score ${cls}"><span class="score-bar"><span class="bar" style="width:${barW}px"></span>${score.toFixed(1)}</span></td>`;
       }
 
       function fmt(ts) {
@@ -352,10 +595,17 @@
           ? avgDur + "s"
           : "—";
 
+        const avgScore = data.length
+          ? (data.reduce((s, d) => s + calcScore(d), 0) / data.length).toFixed(1)
+          : "—";
+        document.getElementById("stat-score").textContent = data.length
+          ? avgScore
+          : "—";
+
         // Table
         const tbody = document.getElementById("tbody");
         if (data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" class="empty">No results match the current filters.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" class="empty">No results match the current filters.</td></tr>`;
           return;
         }
 
@@ -365,10 +615,11 @@
       <tr>
         <td class="task-id">${esc(d.task_id)}</td>
         <td class="model" title="${esc(d.model_name)}">${esc(d.model_name)}</td>
-        <td class="model">${esc(d.agent_version)}</td>
         <td class="num">${d.iterations}</td>
         <td class="num duration">${d.duration_secs.toFixed(2)}</td>
         <td class="num tokens">${d.tokens_used != null ? d.tokens_used.toLocaleString() : "—"}</td>
+        ${scoreCell(d)}
+        <td class="model">${esc(d.agent_version)}</td>
         <td>${fmt(d.timestamp)}</td>
       </tr>`,
           )
