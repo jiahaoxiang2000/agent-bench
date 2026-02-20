@@ -702,5 +702,16 @@
     "tokens_used": 12680,
     "input_tokens": 12162,
     "output_tokens": 518
+  },
+  {
+    "task_id": "CODING-002",
+    "agent_version": "@opencode-ai/sdk@1.2.6",
+    "model_name": "anthropic/claude-sonnet-4-6",
+    "timestamp": "2026-02-20T03:35:31.349Z",
+    "iterations": 4,
+    "duration_secs": 21.73,
+    "tokens_used": 945,
+    "input_tokens": 5,
+    "output_tokens": 940
   }
 ]
